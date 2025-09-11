@@ -4,11 +4,11 @@ import navbar from "./navbar.js";
 import sidebar from "./sidebar.js";
 
 export default hopeTheme({
-  hostname: "https://vuepress-theme-hope-docs-demo.netlify.app",
+  hostname: "https://aeecleclair.github.io/myecl-documentation/",
 
   author: {
-    name: "Mr.Hope",
-    url: "https://mister-hope.com",
+    name: "Aeecleclair",
+    url: "https://github.com/orgs/aeecleclair/",
   },
 
   logo: "https://theme-hope-assets.vuejs.press/logo.svg",
@@ -27,21 +27,13 @@ export default hopeTheme({
 
   displayFooter: true,
 
-  encrypt: {
-    config: {
-      "/demo/encrypt.html": {
-        hint: "Password: 1234",
-        password: "1234",
-      },
-    },
-  },
-
   metaLocales: {
     editLink: "Edit this page on GitHub",
   },
 
   // These features are enabled for demo, only preserve features you need here
   markdown: {
+    footnote: true,
     align: true,
     attrs: true,
     codeTabs: true,
@@ -72,7 +64,7 @@ export default hopeTheme({
     sup: true,
     tabs: true,
     tasklist: true,
-    vPre: true,
+    vPre: false,
 
     // uncomment these if you need TeX support
     // math: {
@@ -111,15 +103,6 @@ export default hopeTheme({
   },
 
   plugins: {
-    // Note: This is for testing ONLY!
-    // You MUST generate and use your own comment service in production.
-    comment: {
-      provider: "Giscus",
-      repo: "vuepress-theme-hope/giscus-discussions",
-      repoId: "R_kgDOG_Pt2A",
-      category: "Announcements",
-      categoryId: "DIC_kwDOG_Pt2M4COD69",
-    },
 
     components: {
       components: ["Badge", "VPCard"],

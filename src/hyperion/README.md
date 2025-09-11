@@ -1,5 +1,5 @@
 ---
-title: Features demo
+title: Hyperion
 index: false
 icon: laptop-code
 category:
