@@ -1,11 +1,8 @@
 ---
 title: Premier pas
-order: 2
+order: 5
 category:
   - Guide
-tag:
-  - Débutant
-author: Skyrol
 ---
 
 Bienvenue dans la documentation de Hyperion, le back-end de MyECL. Ce guide vous aidera à faire vos premiers pas avec Hyperion et à comprendre ses fonctionnalités de base.
@@ -37,13 +34,12 @@ git --version
 Si Git est installé, vous devriez voir quelque chose comme `git version 2.x.x`.
 :::
 
-
 :::tabs
 @tab Github Desktop
 Si Git n'est pas installé sur votre système, nous vous recommandons d'installer Github Desktop, qui inclut Git et offre une interface utilisateur graphique pour gérer vos dépôts Git. Vous pouvez le télécharger depuis [le site officiel de GitHub Desktop](https://desktop.github.com/).
 
 @tab Fork
-Vous pouvez également installer Fork qui est une alternative à Github Desktop plus complète, disponible sur  [le site officiel de Fork](https://git-fork.com/).
+Vous pouvez également installer Fork qui est une alternative à Github Desktop plus complète, disponible sur [le site officiel de Fork](https://git-fork.com/).
 
 @tab Git CLI
 Si vous préférez utiliser les lignes de commandes uniquement, vous pouvez installer Git en suivant les instructions sur [le site officiel de Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
