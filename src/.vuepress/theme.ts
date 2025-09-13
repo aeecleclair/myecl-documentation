@@ -114,11 +114,13 @@ export default hopeTheme({
     components: {
       components: ["Badge", "VPCard"],
     },
-
     icon: {
       prefix: "fa6-solid:",
     },
     readingTime: { wordPerMinute: 150 },
+    slimsearch: {
+      indexContent: true,
+    },
 
     // install @vuepress/plugin-pwa and uncomment these if you want a PWA
     // pwa: {
