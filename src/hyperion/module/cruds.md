@@ -5,29 +5,47 @@ category:
   - Guide
 ---
 
-Donc mtn les cruds, c le 4e pilier d'un module, ça prend en entrée des schemas (cf "lingua franca") et ça fait des requêtes SQL à la db (via l'ORM de SQLAlchemy qui parle les models et pas les schemas).
+Donc mtn les cruds, c le 4e pilier d'un module, ça prend en entrée des schemas (cf "lingua franca")
+et ça fait des requêtes SQL à la db (via l'ORM de SQLAlchemy qui parle les models et pas les
+schemas).
 
-Ça permet de cacher aux endpoints (donc à la logique) l'accès à la db en le masquant dans ces fonctions.
+Ça permet de cacher aux endpoints (donc à la logique) l'accès à la db en le masquant dans ces
+fonctions.
 
-A nouveau le SQL franchement c pas compliqué y a tjs 4 verbes (d'ailleurs faudrait mettre une page de grands principes où on explique que les 4 verbes HTTP (post, get, patch, delete), l'acronyme derrière CRUD (create read update delete) et les 4 verbes sql (insert select update delete) c la mm structure), ce verbe s'applique à une table, puis on peut faire des .where() dessus où on met des conditions pour filtrer, on peut faire des jointures avec d'autres tables qd elles se partagent une colonne, et du selectinload pour faire une requête sur le résultat d'une requête.
+A nouveau le SQL franchement c pas compliqué y a tjs 4 verbes (d'ailleurs faudrait mettre une page
+de grands principes où on explique que les 4 verbes HTTP (post, get, patch, delete), l'acronyme
+derrière CRUD (create read update delete) et les 4 verbes sql (insert select update delete) c la mm
+structure), ce verbe s'applique à une table, puis on peut faire des .where() dessus où on met des
+conditions pour filtrer, on peut faire des jointures avec d'autres tables qd elles se partagent une
+colonne, et du selectinload pour faire une requête sur le résultat d'une requête.
 
 Comme le SQL c N! fois + rapide faut éviter de faire les opérations en Python.
 
-Et à la fin oui faut convertir en Python donc .scalars() puis en général soit .all() pr tout avoir (ça fait une liste) soit .first_or_none() (ça renvoie 1 élément ou rien).
+Et à la fin oui faut convertir en Python donc .scalars() puis en général soit .all() pr tout avoir
+(ça fait une liste) soit .first_or_none() (ça renvoie 1 élément ou rien).
 
-Penser à rappeler que le crud en a aucune idée qu'il est derrière une API HTTP (le crud pourrait très bien être appelé par un script, un logiciel, ...) donc hors de question de raise une HTTPException ds les cruds ou quoi que ce soit qui suppose un contexte HTTP.
+Penser à rappeler que le crud en a aucune idée qu'il est derrière une API HTTP (le crud pourrait
+très bien être appelé par un script, un logiciel, ...) donc hors de question de raise une
+HTTPException ds les cruds ou quoi que ce soit qui suppose un contexte HTTP.
 
-Par contre on peut faire des try-except sur les cruds, si on peut s'attendre à une erreur d'intégrité (et expliquer ce que ça peut être, typiquement c lié à des truc unique en double ou des mapped qui ne se correspondent plus).
+Par contre on peut faire des try-except sur les cruds, si on peut s'attendre à une erreur
+d'intégrité (et expliquer ce que ça peut être, typiquement c lié à des truc unique en double ou des
+mapped qui ne se correspondent plus).
 
 En vrai je crois que là on tient bien l'essentiel des cruds.
 
 Bordel Skyrol là-dessus
 
-SQLAlchemy est une bibliothèque SQL pour Python qui facilite l'interaction avec les **bases de données relationnelles**. Elle offre une interface de haut niveau pour effectuer des opérations **CRUD** (Create, Read, Update, Delete) et gérer les relations entre les tables.
+SQLAlchemy est une bibliothèque SQL pour Python qui facilite l'interaction avec les **bases de
+données relationnelles**. Elle offre une interface de haut niveau pour effectuer des opérations
+**CRUD** (Create, Read, Update, Delete) et gérer les relations entre les tables.
 
 ## Introduction à SQLAlchemy
 
-SQLAlchemy est l'une des bibliothèques les plus populaires de l'écosystème Python pour interagir avec les bases de données. Si vous avez déjà écrit du SQL à la main, vous comprendrez rapidement l'intérêt de cette bibliothèque : elle permet d'écrire du code Python plus lisible et maintenable tout en gardant la puissance du SQL.
+SQLAlchemy est l'une des bibliothèques les plus populaires de l'écosystème Python pour interagir
+avec les bases de données. Si vous avez déjà écrit du SQL à la main, vous comprendrez rapidement
+l'intérêt de cette bibliothèque : elle permet d'écrire du code Python plus lisible et maintenable
+tout en gardant la puissance du SQL.
 
 Au lieu d'écrire des requêtes SQL comme ceci :
 
@@ -50,7 +68,8 @@ SQLAlchemy propose deux façons de travailler avec les bases de données :
 
 ### SQLAlchemy Core
 
-L'approche "Expression Language" qui reste proche du SQL mais avec une syntaxe Python. Elle offre un contrôle fin sur les requêtes générées.
+L'approche "Expression Language" qui reste proche du SQL mais avec une syntaxe Python. Elle offre un
+contrôle fin sur les requêtes générées.
 
 ```python
 from sqlalchemy import select, text
@@ -63,7 +82,8 @@ result = connection.execute(
 
 ### SQLAlchemy ORM
 
-L'**Object-Relational Mapping** transforme vos tables en classes Python et vos lignes en objets. C'est cette approche que nous utilisons principalement dans Hyperion.
+L'**Object-Relational Mapping** transforme vos tables en classes Python et vos lignes en objets.
+C'est cette approche que nous utilisons principalement dans Hyperion.
 
 ```python
 # Avec ORM
@@ -72,14 +92,19 @@ print(user.username, user.email)
 ```
 
 ::: info Choix dans Hyperion
-Dans Hyperion, nous privilégions l'ORM car il offre une meilleure lisibilité du code et facilite la maintenance pour une équipe de développeurs. L'approche objet est également plus intuitive pour la plupart des développeurs Python.
+
+Dans Hyperion, nous privilégions l'ORM car il offre une meilleure lisibilité du code et facilite la
+maintenance pour une équipe de développeurs. L'approche objet est également plus intuitive pour la
+plupart des développeurs Python.
+
 :::
 
 ## Concepts fondamentaux
 
 ### Les Modèles
 
-Les modèles sont des classes Python qui représentent vos tables de base de données. Chaque attribut de classe correspond à une colonne de la table.
+Les modèles sont des classes Python qui représentent vos tables de base de données. Chaque attribut
+de classe correspond à une colonne de la table.
 
 ```python
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
@@ -112,7 +137,8 @@ class TodoItem(Base):
 
 ### Les Sessions
 
-La session est votre interface principale pour interagir avec la base de données. Elle gère le cycle de vie de vos objets et les transactions.
+La session est votre interface principale pour interagir avec la base de données. Elle gère le cycle
+de vie de vos objets et les transactions.
 
 ```python
 from sqlalchemy.orm import sessionmaker
@@ -132,7 +158,8 @@ finally:
 
 ### Les Relations
 
-SQLAlchemy permet de définir facilement les relations entre vos modèles, automatisant ainsi les jointures SQL.
+SQLAlchemy permet de définir facilement les relations entre vos modèles, automatisant ainsi les
+jointures SQL.
 
 ```python
 # Récupérer un utilisateur avec tous ses todos
@@ -145,7 +172,8 @@ for todo in user.todos:
 
 ## SQLAlchemy Asynchrone dans Hyperion
 
-Hyperion utilise la version asynchrone de SQLAlchemy pour améliorer les performances et la gestion de la concurrence. Voici les principales différences :
+Hyperion utilise la version asynchrone de SQLAlchemy pour améliorer les performances et la gestion
+de la concurrence. Voici les principales différences :
 
 ### Session Asynchrone
 
@@ -244,23 +272,32 @@ Maintenant que vous avez une vue d'ensemble de SQLAlchemy, vous pouvez approfond
 1. [Comment utiliser SQLAlchemy](./how-to-use.md) - Guide pratique avec des exemples concrets
 2. [Les migrations](./migrations.md) - Gestion de l'évolution du schéma de base de données
 
-SQLAlchemy peut sembler complexe au début, mais une fois que vous maîtrisez les concepts de base, il devient un outil très puissant pour développer des applications robustes et maintenables.
+SQLAlchemy peut sembler complexe au début, mais une fois que vous maîtrisez les concepts de base, il
+devient un outil très puissant pour développer des applications robustes et maintenables.
 
 ---
 
 page 2...
 
-Désormais nous allons voir comment utiliser SQLAlchemy dans un projet Python. Nous allons couvrir les bases de la configuration, de la définition des modèles, et de l'exécution des opérations CRUD (Create, Read, Update, Delete).
+Désormais nous allons voir comment utiliser SQLAlchemy dans un projet Python. Nous allons couvrir
+les bases de la configuration, de la définition des modèles, et de l'exécution des opérations CRUD
+(Create, Read, Update, Delete).
 
-Dans ce guide, nous utiliserons un exemple simple d'une application de gestion de tâches (To-Do List) pour illustrer les concepts.
-On peut imaginer que nous avons deux modèles principaux : `User` et `TodosItem`. Un utilisateur peut avoir plusieurs tâches (relation un-à-plusieurs). On peut créer, lire, mettre à jour et supprimer des tâches associées à un utilisateur.
+Dans ce guide, nous utiliserons un exemple simple d'une application de gestion de tâches (To-Do
+List) pour illustrer les concepts. On peut imaginer que nous avons deux modèles principaux : `User`
+et `TodosItem`. Un utilisateur peut avoir plusieurs tâches (relation un-à-plusieurs). On peut créer,
+lire, mettre à jour et supprimer des tâches associées à un utilisateur.
 
 ## Imports nécessaires
 
-Avant de commencer, voici les imports typiques dont vous aurez besoin pour travailler avec SQLAlchemy dans Hyperion :
+Avant de commencer, voici les imports typiques dont vous aurez besoin pour travailler avec
+SQLAlchemy dans Hyperion :
 
 ::: tip
-De manière plus générale, votre éditeur de code (comme VSCode ou PyCharm) peut vous aider à gérer les imports automatiquement.
+
+De manière plus générale, votre éditeur de code (comme VSCode ou PyCharm) peut vous aider à gérer
+les imports automatiquement.
+
 :::
 
 ```python
@@ -277,7 +314,8 @@ from app.models import models_todos  # Remplacez par votre modèle
 
 ### Lecture des données (Read)
 
-La lecture de données se fait principalement avec la fonction `select()`. Voici comment récupérer des enregistrements :
+La lecture de données se fait principalement avec la fonction `select()`. Voici comment récupérer
+des enregistrements :
 
 ```python
 async def get_items_by_user_id(
@@ -371,7 +409,10 @@ async def delete_item(
 ### Gestion des transactions
 
 ::: warning Gestion des erreurs
-Toujours encapsuler les opérations de modification dans des blocs try/catch pour gérer les erreurs d'intégrité et effectuer un rollback si nécessaire.
+
+Toujours encapsuler les opérations de modification dans des blocs try/catch pour gérer les erreurs
+d'intégrité et effectuer un rollback si nécessaire.
+
 :::
 
 ```python
@@ -424,7 +465,10 @@ async def create_validated_item(
 ## Jointures et requêtes avancées
 
 ::: warning Complexité avancée
-Les jointures peuvent rapidement devenir complexes et impacter les performances. Utilisez-les avec parcimonie et testez toujours les performances sur des données réelles.
+
+Les jointures peuvent rapidement devenir complexes et impacter les performances. Utilisez-les avec
+parcimonie et testez toujours les performances sur des données réelles.
+
 :::
 
 ### Jointures simples
@@ -448,7 +492,10 @@ async def get_items_with_user(
 ### Comprendre `joinedload()` - Le chargement eager
 
 ::: info Qu'est-ce que `joinedload()` ?
-`joinedload()` est une stratégie de chargement **eager** (avide) qui permet de récupérer les objets liés en une seule requête SQL au lieu de faire des requêtes séparées.
+
+`joinedload()` est une stratégie de chargement **eager** (avide) qui permet de récupérer les objets
+liés en une seule requête SQL au lieu de faire des requêtes séparées.
+
 :::
 
 #### Problème du N+1
@@ -546,6 +593,7 @@ async def get_items_with_user_and_profile(db: AsyncSession):
 ```
 
 ::: details Requête SQL générée
+
 Avec `joinedload()`, SQLAlchemy génère une requête avec LEFT OUTER JOIN :
 
 ```sql
@@ -699,4 +747,5 @@ async def toggle_completion(
     return new_status
 ```
 
-Cette approche modulaire et bien structurée vous permettra de maintenir un code propre et efficace lors de l'utilisation de SQLAlchemy dans Hyperion.
+Cette approche modulaire et bien structurée vous permettra de maintenir un code propre et efficace
+lors de l'utilisation de SQLAlchemy dans Hyperion.

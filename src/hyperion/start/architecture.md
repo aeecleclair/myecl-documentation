@@ -7,7 +7,8 @@ category:
 
 A la fois
 
-- l'archi à l'échelle du repo (des fichiers à la racine, des migrations, des tests, des assets, des modules, du core, des utils, etc)
+- l'archi à l'échelle du repo (des fichiers à la racine, des migrations, des tests, des assets, des
+  modules, du core, des utils, etc)
 - et un point spécifique sur l'archi d'un module
 
 ## Architecture à l'échelle du _repository_
