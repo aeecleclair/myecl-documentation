@@ -1,4 +1,3 @@
-
 name: Deploy Docs
 
 on:
@@ -19,8 +18,6 @@ jobs:
           fetch-depth: 0
           # if your docs needs submodules, uncomment the following line
           # submodules: true
-
-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
