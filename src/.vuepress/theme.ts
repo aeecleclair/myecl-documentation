@@ -33,6 +33,7 @@ export default hopeTheme({
 
   // These features are enabled for demo, only preserve features you need here
   markdown: {
+    mermaid: true,
     footnote: true,
     align: true,
     attrs: true,
@@ -47,6 +48,13 @@ export default hopeTheme({
     mark: true,
     plantuml: true,
     spoiler: true,
+    highlighter: {
+      type: "shiki",
+      highlightLines: true,
+      notationDiff: true,
+      notationHighlight: true,
+      collapsedLines: 30,
+    },
     stylize: [
       {
         matcher: "Recommended",
