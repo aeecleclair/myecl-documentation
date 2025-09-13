@@ -1,4 +1,4 @@
 User-agent:*
 Disallow:
 
-Sitemap: https://aeecleclair.github.io/myecl-documentation/sitemap.xml
+Sitemap: https://docs.myecl.fr/sitemap.xml
