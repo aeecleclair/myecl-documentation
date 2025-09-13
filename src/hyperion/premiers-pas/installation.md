@@ -1,6 +1,6 @@
 ---
-title: Premier pas
-order: 2
+title: Installation
+order: 3
 category:
   - Guide
 tag:
