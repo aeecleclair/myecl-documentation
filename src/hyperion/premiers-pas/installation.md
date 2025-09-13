@@ -1,6 +1,6 @@
 ---
-title: Premier pas
-order: 2
+title: Installation
+order: 3
 category:
   - Guide
 tag:
@@ -66,3 +66,8 @@ Une fois Git installé et configuré, vous pouvez cloner le dépôt Hyperion en 
 ```bash
 git clone https://github.com/aeecleclair/hyperion.git
 ```
+
+## Suivre les instructions d'installation du README
+
+Après avoir cloné le dépôt, naviguez dans le répertoire du projet et suivez les instructions d'installation fournies dans le fichier `README.md`. Cela vous guidera à travers le processus de configuration et d'installation d'Hyperion.
+
