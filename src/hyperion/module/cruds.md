@@ -560,7 +560,8 @@ Sans `joinedload()`, vous auriez :
 
 1. `SELECT * FROM todos_item WHERE id = ?`
 2. `SELECT * FROM user WHERE id = ?` (pour chaque item accédé)
-   :::
+
+:::
 
 ### Jointures avec filtres
 
