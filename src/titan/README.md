@@ -1,6 +1,5 @@
 ---
-title: Hyperion
-icon: laptop-code
+title: Titan
 category:
   - Guide
 ---
