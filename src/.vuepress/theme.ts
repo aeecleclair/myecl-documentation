@@ -4,14 +4,14 @@ import navbar from "./navbar.js";
 import sidebar from "./sidebar.js";
 
 export default hopeTheme({
-  hostname: "https://aeecleclair.github.io/myecl-documentation/",
+  hostname: "https://docs.myecl.fr",
 
   author: {
     name: "Aeecleclair",
-    url: "https://github.com/orgs/aeecleclair/",
+    url: "https://github.com/aeecleclair/",
   },
 
-  logo: "https://theme-hope-assets.vuejs.press/logo.svg",
+  logo: "/common/logoeclair.svg",
 
   repo: "vuepress-theme-hope/vuepress-theme-hope",
 
@@ -23,7 +23,7 @@ export default hopeTheme({
   // sidebar
   sidebar,
 
-  footer: "Default footer",
+  footer: "Cuisiné par ÉCLAIR",
 
   displayFooter: true,
 
@@ -111,7 +111,6 @@ export default hopeTheme({
   },
 
   plugins: {
-
     components: {
       components: ["Badge", "VPCard"],
     },
@@ -119,6 +118,7 @@ export default hopeTheme({
     icon: {
       prefix: "fa6-solid:",
     },
+    readingTime: { wordPerMinute: 150 },
 
     // install @vuepress/plugin-pwa and uncomment these if you want a PWA
     // pwa: {

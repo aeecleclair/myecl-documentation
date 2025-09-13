@@ -7,16 +7,26 @@ bgImage: https://theme-hope-assets.vuejs.press/bg/6-light.svg
 bgImageDark: https://theme-hope-assets.vuejs.press/bg/6-dark.svg
 bgImageStyle:
   background-attachment: fixed
-heroText: Project name
-tagline: You can place the description of the project here.
+heroText: Documentation MyECL
+tagline: L'application pour l'associatif centralien, développée par ÉCLAIR
 actions:
-  - text: How to Use
-    icon: lightbulb
-    link: ./demo/
+  - text: Git
+    #icon: lightbulb
+    link: ./git/
+
+  - text: Hyperion
+    #icon: lightbulb
+    link: ./hyperion/
     type: primary
 
-  - text: Docs
-    link: ./guide/
+  - text: Titan
+    #icon: lightbulb
+    link: ./titan/
+    type: primary
+
+  - text: Méta-docs
+    #icon: lightbulb
+    link: ./metadocs/
 
 highlights:
   - header: Easy to install
