@@ -10,6 +10,14 @@ export default defineUserConfig({
   description: "La doc de MyECL...",
 
   head: [
+    [
+      "script",
+      {
+        defer: true,
+        "data-domain": "docs.myecl.fr",
+        src: "https://plausible.eclair.ec-lyon.fr/js/script.outbound-links.js",
+      },
+    ],
     ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
     ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
     [
