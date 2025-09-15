@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@vuepress/bundler-vite": "2.0.0-rc.24",
+    "@vuepress/plugin-slimsearch": "^2.0.0-rc.112",
     "mermaid": "^11.11.0",
     "prettier": "3.6.2",
     "sass-embedded": "^1.89.2",

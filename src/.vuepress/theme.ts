@@ -2,12 +2,13 @@ import { hopeTheme } from "vuepress-theme-hope";
 
 import navbar from "./navbar.js";
 import sidebar from "./sidebar.js";
+import { slimsearchPlugin } from "@vuepress/plugin-slimsearch";
 
 export default hopeTheme({
   hostname: "https://docs.myecl.fr",
 
   author: {
-    name: "Aeecleclair",
+    name: "AEECL ÉCLAIR",
     url: "https://github.com/aeecleclair/",
   },
 
@@ -23,7 +24,7 @@ export default hopeTheme({
   // sidebar
   sidebar,
 
-  footer: "Cuisiné par ÉCLAIR",
+  footer: "🐮",
 
   displayFooter: true,
 
@@ -114,11 +115,13 @@ export default hopeTheme({
     components: {
       components: ["Badge", "VPCard"],
     },
-
     icon: {
       prefix: "fa6-solid:",
     },
     readingTime: { wordPerMinute: 150 },
+    slimsearch: {
+      indexContent: true,
+    },
 
     // install @vuepress/plugin-pwa and uncomment these if you want a PWA
     // pwa: {

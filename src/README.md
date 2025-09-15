@@ -34,16 +34,11 @@ highlights:
     bgImage: https://theme-hope-assets.vuejs.press/bg/3-light.svg
     bgImageDark: https://theme-hope-assets.vuejs.press/bg/3-dark.svg
     highlights:
-      - title:
-          Run <code>pnpm create vuepress-theme-hope hope-project</code> to create a new project with
-          this theme.
-      - title:
-          Run <code>pnpm create vuepress-theme-hope add .</code> in your project root to create a
-          new project with this theme.
+      - title: Run <code>pnpm create vuepress-theme-hope hope-project</code> to create a new project with this theme.
+      - title: Run <code>pnpm create vuepress-theme-hope add .</code> in your project root to create a new project with this theme.
 
   - header: Add things you want in markdown
-    description:
-      We extended the standard commonMark specification and added tons of new features for you.
+    description: We extended the standard commonMark specification and added tons of new features for you.
     image: /assets/image/markdown.svg
     bgImage: https://theme-hope-assets.vuejs.press/bg/2-light.svg
     bgImageDark: https://theme-hope-assets.vuejs.press/bg/2-dark.svg
@@ -230,9 +225,7 @@ highlights:
 
       - title: Other Layout Improvement
         icon: object-group
-        details:
-          Improved page nav and new breadcrumb, footer and toc. We also bring you a brand new
-          homepage.
+        details: Improved page nav and new breadcrumb, footer and toc. We also bring you a brand new homepage.
         link: https://theme-hope.vuejs.press/guide/layout/
 
   - header: New features
@@ -252,14 +245,12 @@ highlights:
 
       - title: Article Information
         icon: circle-info
-        details:
-          Add author, writing date, reading time, word count and other information to your article
+        details: Add author, writing date, reading time, word count and other information to your article
         link: https://theme-hope.vuejs.press/guide/feature/page-info.html
 
       - title: Article Encryption
         icon: lock
-        details:
-          Encrypt you articles based on page links, so that only the one you want could see them
+        details: Encrypt you articles based on page links, so that only the one you want could see them
         link: https://theme-hope.vuejs.press/guide/feature/encrypt.html
 
       - title: Search
@@ -330,14 +321,11 @@ highlights:
         link: https://theme-hope.vuejs.press/guide/advanced/pwa.html
 
 copyright: false
-footer:
-  Theme by <a href="https://theme-hope.vuejs.press/" target="_blank">VuePress Theme Hope</a> | MIT
-  Licensed, Copyright © 2019-present Mr.Hope
+footer: Theme by <a href="https://theme-hope.vuejs.press/" target="_blank">VuePress Theme Hope</a> | MIT Licensed, Copyright © 2019-present Mr.Hope
 ---
 
 This is an example of a project homepage. You can place your main content here.
 
 To use this layout, you need to set `home: true` in the page front matter.
 
-For related descriptions of configuration items, please see
-[Project HomePage Layout Config](https://theme-hope.vuejs.press/guide/layout/home.html).
+For related descriptions of configuration items, please see [Project HomePage Layout Config](https://theme-hope.vuejs.press/guide/layout/home.html).
