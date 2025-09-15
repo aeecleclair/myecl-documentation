@@ -568,9 +568,7 @@ async def get_users_summary(
 
 ::: details Debugging et profiling
 
-::: tabs
-
-@tab Logger SQL
+Logger SQL
 
 ```python [Logger SQL]
 import logging
@@ -583,7 +581,7 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 # SQLALCHEMY_ECHO=True dans votre configuration
 ```
 
-@tab Middleware de monitoring
+Middleware de monitoring
 
 ```python [Middleware de monitoring]
 from fastapi import Request
@@ -611,8 +609,6 @@ class SQLMonitoringMiddleware:
 monitoring = SQLMonitoringMiddleware()
 monitoring.setup_monitoring(engine)
 ```
-
-:::
 
 :::
 
