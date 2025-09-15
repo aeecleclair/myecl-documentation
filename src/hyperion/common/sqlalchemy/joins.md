@@ -1,5 +1,5 @@
 ---
-title: Guide des Jointures SQLAlchemy
+title: Jointures
 description: Guide complet pour maîtriser les jointures SQLAlchemy dans Hyperion
 order: 1
 category:
@@ -12,6 +12,13 @@ tag:
 ---
 
 # Guide des Jointures SQLAlchemy
+
+
+::: danger Disclaimer
+
+Les noms, propriétés des modèles ne sont pas ceux d'Hyperion mais sont ici présents pour faciliter la compréhension. C'est donc à vous d'adapter votre code en fonction de vos propres modèles.
+
+:::
 
 ## Introduction
 
@@ -55,10 +62,17 @@ WHERE users.username = 'john_doe';
 @tab SQLAlchemy
 
 ```python [SQLAlchemy]
-# Jointure explicite avec SQLAlchemy
-result = session.query(User).options(
-    joinedload(User.todos)
-).filter(User.username == 'john_doe').first()
+# Jointure explicite avec SQLAlchemy moderne
+async def get_user_with_todos(
+    db: AsyncSession,
+    username: str,
+) -> CoreUser | None:
+    result = await db.execute(
+        select(CoreUser)
+        .where(CoreUser.username == username)
+        .options(selectinload(CoreUser.todos))
+    )
+    return result.scalars().first()
 ```
 
 :::
@@ -94,9 +108,16 @@ WHERE todos.user_id = ?;
 
 ```python [SQLAlchemy]
 # Chargement lazy (par défaut)
-user = session.query(User).filter(User.username == 'john_doe').first()
-# Cette ligne déclenche une nouvelle requête SQL
-todos = user.todos  # N+1 queries problem!
+async def get_user(db: AsyncSession, username: str) -> CoreUser | None:
+    result = await db.execute(
+        select(CoreUser).where(CoreUser.username == username)
+    )
+    user = result.scalars().first()
+    
+    # Cette ligne déclenche une nouvelle requête SQL
+    if user:
+        todos = user.todos  # N+1 queries problem!
+    return user
 ```
 
 :::
@@ -142,28 +163,39 @@ Un `User` peut avoir un seul `Profile` détaillé avec photo, bio, etc.
 ### Définition des modèles
 
 ```python [models.py]
-from sqlalchemy import Column, Integer, String, ForeignKey, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-class User(Base):
-    __tablename__ = 'users'
+class CoreUser(Base):
+    __tablename__ = "core_user"
     
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50), unique=True)
-    email = Column(String(100))
+    id: Mapped[str] = mapped_column(primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(index=True, unique=True)
+    email: Mapped[str] = mapped_column(index=True, unique=True)
     
     # Relation one-to-one
-    profile = relationship("Profile", uselist=False, back_populates="user")
+    profile: Mapped["CoreUserProfile"] = relationship(
+        "CoreUserProfile", 
+        uselist=False, 
+        back_populates="user"
+    )
 
-class Profile(Base):
-    __tablename__ = 'profiles'
+class CoreUserProfile(Base):
+    __tablename__ = "core_user_profile"
     
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'), unique=True)
-    bio = Column(Text)
-    avatar_url = Column(String(255))
+    id: Mapped[str] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("core_user.id"), 
+        unique=True, 
+        index=True
+    )
+    bio: Mapped[str | None] = mapped_column(Text)
+    avatar_url: Mapped[str | None]
     
-    user = relationship("User", back_populates="profile")
+    user: Mapped["CoreUser"] = relationship(
+        "CoreUser", 
+        back_populates="profile"
+    )
 ```
 
 ### Stratégies de chargement
@@ -173,23 +205,43 @@ class Profile(Base):
 @tab Chargement eager (recommandé)
 
 ```python [Chargement eager (recommandé)]
-# Avec joinedload - une seule requête
-user_with_profile = session.query(User).options(
-    joinedload(User.profile)
-).filter(User.username == 'john').first()
-
-# Accès au profil sans requête supplémentaire
-bio = user_with_profile.profile.bio if user_with_profile.profile else None
+async def get_user_with_profile(
+    db: AsyncSession,
+    username: str,
+) -> CoreUser | None:
+    """Récupère un utilisateur avec son profil en une seule requête"""
+    result = await db.execute(
+        select(CoreUser)
+        .where(CoreUser.username == username)
+        .options(joinedload(CoreUser.profile))
+    )
+    user = result.scalars().first()
+    
+    # Accès au profil sans requête supplémentaire
+    if user and user.profile:
+        bio = user.profile.bio
+    
+    return user
 ```
 
 @tab Chargement lazy (par défaut)
 
 ```python [Chargement lazy (par défaut)]
-# Première requête
-user = session.query(User).filter(User.username == 'john').first()
-
-# Deuxième requête déclenchée ici
-profile = user.profile  # Peut être None
+async def get_user_lazy(
+    db: AsyncSession,
+    username: str,
+) -> CoreUser | None:
+    """Chargement lazy du profil (déclenche une requête supplémentaire)"""
+    result = await db.execute(
+        select(CoreUser).where(CoreUser.username == username)
+    )
+    user = result.scalars().first()
+    
+    # Cette ligne déclenche une deuxième requête SQL
+    if user:
+        profile = user.profile  # Peut être None
+    
+    return user
 ```
 
 :::
@@ -203,30 +255,40 @@ Pour les relations one-to-one, utilisez toujours `joinedload()` car le coût de 
 Les relations one-to-many sont les plus courantes. Un parent peut avoir plusieurs enfants.
 
 ::: info Exemple concret
-Un `User` peut avoir plusieurs `Todo` tasks.
+Un `CoreUser` peut avoir plusieurs `CoreAssociation` (adhésions à des associations).
 :::
 
 ### Définition des modèles
 
 ```python [models.py]
-class User(Base):
-    __tablename__ = 'users'
+from sqlalchemy import Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+class CoreUser(Base):
+    __tablename__ = "core_user"
     
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50))
+    id: Mapped[str] = mapped_column(primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(index=True, unique=True)
     
     # Relation one-to-many
-    todos = relationship("Todo", back_populates="user")
+    associations: Mapped[list["CoreAssociation"]] = relationship(
+        "CoreAssociation",
+        back_populates="user",
+        default_factory=list,
+    )
 
-class Todo(Base):
-    __tablename__ = 'todos'
+class CoreAssociation(Base):
+    __tablename__ = "core_association"
     
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    title = Column(String(200))
-    completed = Column(Boolean, default=False)
+    id: Mapped[str] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("core_user.id"), index=True)
+    name: Mapped[str] = mapped_column(index=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
     
-    user = relationship("User", back_populates="todos")
+    user: Mapped["CoreUser"] = relationship(
+        "CoreUser",
+        back_populates="associations"
+    )
 ```
 
 ### Stratégies selon le cas d'usage
@@ -236,36 +298,54 @@ class Todo(Base):
 @tab Petit nombre d'enfants (selectinload)
 
 ```python [Petit nombre d'enfants - selectinload]
-# Recommandé pour < 100 enfants par parent
-users_with_todos = session.query(User).options(
-    selectinload(User.todos)
-).all()
-
-# Génère 2 requêtes optimisées :
-# 1. SELECT users.*
-# 2. SELECT todos.* WHERE user_id IN (1, 2, 3, ...)
+async def get_users_with_associations(
+    db: AsyncSession,
+) -> list[CoreUser]:
+    """Recommandé pour < 100 associations par utilisateur"""
+    result = await db.execute(
+        select(CoreUser).options(selectinload(CoreUser.associations))
+    )
+    
+    # Génère 2 requêtes optimisées :
+    # 1. SELECT core_user.*
+    # 2. SELECT core_association.* WHERE user_id IN (?, ?, ?, ...)
+    
+    return result.scalars().all()
 ```
 
 @tab Grand nombre d'enfants (lazy + pagination)
 
 ```python [Grand nombre d'enfants - lazy + pagination]
-# Pour de nombreux todos, chargez à la demande avec pagination
-user = session.query(User).filter(User.id == 1).first()
-
-# Paginer les todos
-page_size = 20
-todos_page = session.query(Todo).filter(
-    Todo.user_id == user.id
-).limit(page_size).offset(0).all()
+async def get_user_associations_paginated(
+    db: AsyncSession,
+    user_id: str,
+    page: int = 0,
+    page_size: int = 20,
+) -> list[CoreAssociation]:
+    """Pour de nombreuses associations, chargez à la demande avec pagination"""
+    result = await db.execute(
+        select(CoreAssociation)
+        .where(CoreAssociation.user_id == user_id)
+        .limit(page_size)
+        .offset(page * page_size)
+    )
+    return result.scalars().all()
 ```
 
-```python [Jointure avec filtres - joinedload]
-# Quand vous filtrez sur les enfants
-users_with_active_todos = session.query(User).options(
-    joinedload(User.todos)
-).join(User.todos).filter(
-    Todo.completed == False
-).all()
+@tab Jointure avec filtres
+
+```python [Jointure avec filtres]
+async def get_users_with_active_associations(
+    db: AsyncSession,
+) -> list[CoreUser]:
+    """Quand vous filtrez sur les enfants"""
+    result = await db.execute(
+        select(CoreUser)
+        .options(selectinload(CoreUser.associations))
+        .join(CoreUser.associations)
+        .where(CoreAssociation.is_active == True)
+    )
+    return result.scalars().all()
 ```
 
 :::
@@ -273,14 +353,22 @@ users_with_active_todos = session.query(User).options(
 ::: warning Attention au N+1
 ```python
 # ❌ Problème N+1 - évitez ceci !
-users = session.query(User).all()  # 1 requête
-for user in users:
-    print(len(user.todos))  # N requêtes supplémentaires !
+async def bad_example(db: AsyncSession) -> None:
+    result = await db.execute(select(CoreUser))
+    users = result.scalars().all()  # 1 requête
+    
+    for user in users:
+        print(len(user.associations))  # N requêtes supplémentaires !
 
 # ✅ Solution avec selectinload
-users = session.query(User).options(selectinload(User.todos)).all()
-for user in users:
-    print(len(user.todos))  # Pas de requête supplémentaire
+async def good_example(db: AsyncSession) -> None:
+    result = await db.execute(
+        select(CoreUser).options(selectinload(CoreUser.associations))
+    )
+    users = result.scalars().all()
+    
+    for user in users:
+        print(len(user.associations))  # Pas de requête supplémentaire
 ```
 :::
 
@@ -289,34 +377,50 @@ for user in users:
 Les relations many-to-many nécessitent une table d'association et demandent une attention particulière.
 
 ::: info Exemple concret
-Un `User` peut appartenir à plusieurs `Group`, et un `Group` peut contenir plusieurs `User`.
+Un `CoreUser` peut appartenir à plusieurs `CoreGroup`, et un `CoreGroup` peut contenir plusieurs `CoreUser`.
 :::
 
 ### Définition des modèles
 
 ```python [models.py]
+from sqlalchemy import Table, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 # Table d'association
-user_groups = Table('user_groups', Base.metadata,
-    Column('user_id', Integer, ForeignKey('users.id')),
-    Column('group_id', Integer, ForeignKey('groups.id'))
+core_membership = Table(
+    "core_membership", 
+    Base.metadata,
+    mapped_column("user_id", ForeignKey("core_user.id"), primary_key=True),
+    mapped_column("group_id", ForeignKey("core_group.id"), primary_key=True),
 )
 
-class User(Base):
-    __tablename__ = 'users'
+class CoreUser(Base):
+    __tablename__ = "core_user"
     
-    id = Column(Integer, primary_key=True)
-    username = Column(String(50))
+    id: Mapped[str] = mapped_column(primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(index=True, unique=True)
     
     # Relation many-to-many
-    groups = relationship("Group", secondary=user_groups, back_populates="users")
+    groups: Mapped[list["CoreGroup"]] = relationship(
+        "CoreGroup",
+        secondary="core_membership",
+        back_populates="members",
+        default_factory=list,
+    )
 
-class Group(Base):
-    __tablename__ = 'groups'
+class CoreGroup(Base):
+    __tablename__ = "core_group"
     
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100))
+    id: Mapped[str] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(index=True, unique=True)
+    description: Mapped[str | None]
     
-    users = relationship("User", secondary=user_groups, back_populates="groups")
+    members: Mapped[list["CoreUser"]] = relationship(
+        "CoreUser",
+        secondary="core_membership",
+        back_populates="groups",
+        default_factory=list,
+    )
 ```
 
 ### Stratégies de chargement optimisées
@@ -326,49 +430,88 @@ class Group(Base):
 @tab Chargement standard (selectinload)
 
 ```python [Chargement standard - selectinload]
-# Pour un nombre modéré de relations
-users_with_groups = session.query(User).options(
-    selectinload(User.groups)
-).all()
+async def get_users_with_groups(
+    db: AsyncSession,
+) -> list[CoreUser]:
+    """Pour un nombre modéré de relations"""
+    result = await db.execute(
+        select(CoreUser).options(selectinload(CoreUser.groups))
+    )
+    return result.scalars().all()
 ```
 
-@tab Chargement dynamique (lazy) - large dataset
+@tab Chargement avec filtres
 
-```python [Chargement dynamique - large dataset]
-class User(Base):
-    # ... autres champs
-    groups = relationship("Group", 
-                         secondary=user_groups, 
-                         lazy='dynamic',  # Retourne une Query
-                         back_populates="users")
-
-# Usage avec pagination
-user = session.query(User).first()
-active_groups = user.groups.filter(Group.active == True).all()
-group_count = user.groups.count()
+```python [Chargement avec filtres]
+async def get_active_groups_for_user(
+    db: AsyncSession,
+    user_id: str,
+) -> list[CoreGroup]:
+    """Filtrer les groupes directement dans la requête"""
+    result = await db.execute(
+        select(CoreGroup)
+        .join(core_membership)
+        .join(CoreUser)
+        .where(CoreUser.id == user_id)
+        .where(CoreGroup.is_active == True)
+    )
+    return result.scalars().all()
 ```
 
 @tab Association Object Pattern - métadonnées
 
 ```python [Association Object Pattern - métadonnées]
-# Pour stocker des métadonnées sur la relation
-class UserGroup(Base):
-    __tablename__ = 'user_groups'
-    
-    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    group_id = Column(Integer, ForeignKey('groups.id'), primary_key=True)
-    joined_date = Column(DateTime, default=datetime.utcnow)
-    role = Column(String(50), default='member')
-    
-    user = relationship("User", back_populates="group_memberships")
-    group = relationship("Group", back_populates="user_memberships")
+from datetime import datetime
 
-class User(Base):
-    group_memberships = relationship("UserGroup", back_populates="user")
+# Pour stocker des métadonnées sur la relation
+class CoreMembership(Base):
+    __tablename__ = "core_membership"
+    
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("core_user.id"), 
+        primary_key=True
+    )
+    group_id: Mapped[str] = mapped_column(
+        ForeignKey("core_group.id"), 
+        primary_key=True
+    )
+    joined_date: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
+    role: Mapped[str] = mapped_column(default="member")
+    
+    user: Mapped["CoreUser"] = relationship(
+        "CoreUser", 
+        back_populates="group_memberships"
+    )
+    group: Mapped["CoreGroup"] = relationship(
+        "CoreGroup", 
+        back_populates="user_memberships"
+    )
+
+class CoreUser(Base):
+    group_memberships: Mapped[list["CoreMembership"]] = relationship(
+        "CoreMembership", 
+        back_populates="user",
+        default_factory=list,
+    )
     
     @property
-    def groups(self):
+    def groups(self) -> list[CoreGroup]:
         return [membership.group for membership in self.group_memberships]
+
+# Usage
+async def get_user_with_membership_details(
+    db: AsyncSession,
+    user_id: str,
+) -> CoreUser | None:
+    result = await db.execute(
+        select(CoreUser)
+        .where(CoreUser.id == user_id)
+        .options(
+            selectinload(CoreUser.group_memberships)
+            .selectinload(CoreMembership.group)
+        )
+    )
+    return result.scalars().first()
 ```
 
 :::
@@ -388,11 +531,17 @@ class User(Base):
 @tab Chargement multi-niveaux
 
 ```python [Chargement multi-niveaux]
-# Chargement optimisé sur plusieurs niveaux
-users = session.query(User).options(
-    selectinload(User.todos).selectinload(Todo.tags),
-    joinedload(User.profile)
-).all()
+async def get_users_with_full_context(
+    db: AsyncSession,
+) -> list[CoreUser]:
+    """Chargement optimisé sur plusieurs niveaux"""
+    result = await db.execute(
+        select(CoreUser).options(
+            selectinload(CoreUser.associations).selectinload(CoreAssociation.events),
+            joinedload(CoreUser.profile)
+        )
+    )
+    return result.scalars().all()
 ```
 
 @tab Chargement conditionnel
@@ -400,18 +549,24 @@ users = session.query(User).options(
 ```python [Chargement conditionnel]
 from sqlalchemy.orm import load_only
 
-# Charger seulement certains champs
-users = session.query(User).options(
-    load_only(User.username, User.email),
-    selectinload(User.todos).load_only(Todo.title, Todo.completed)
-).all()
+async def get_users_summary(
+    db: AsyncSession,
+) -> list[CoreUser]:
+    """Charger seulement certains champs"""
+    result = await db.execute(
+        select(CoreUser).options(
+            load_only(CoreUser.username, CoreUser.email),
+            selectinload(CoreUser.groups).load_only(CoreGroup.name)
+        )
+    )
+    return result.scalars().all()
 ```
 
 :::
 
 ### Debugging et monitoring
 
-::: details Debugging
+::: details Debugging et profiling
 
 ::: tabs
 
@@ -420,23 +575,41 @@ users = session.query(User).options(
 ```python [Logger SQL]
 import logging
 
-# Activer les logs SQL pour débugger
+# Activer les logs SQL pour débugger (à configurer dans settings)
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+# En développement, vous pouvez aussi utiliser :
+# SQLALCHEMY_ECHO=True dans votre configuration
 ```
 
-@tab Compteur de requêtes
+@tab Middleware de monitoring
 
-```python [Compteur de requêtes]
+```python [Middleware de monitoring]
+from fastapi import Request
 from sqlalchemy import event
+import time
 
-query_count = 0
+class SQLMonitoringMiddleware:
+    def __init__(self):
+        self.query_count = 0
+        self.total_time = 0
+    
+    def setup_monitoring(self, engine):
+        @event.listens_for(engine, "before_cursor_execute")
+        def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            context._query_start_time = time.time()
+            self.query_count += 1
+            
+        @event.listens_for(engine, "after_cursor_execute")
+        def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+            total = time.time() - context._query_start_time
+            self.total_time += total
+            print(f"Query #{self.query_count}: {total:.3f}s")
 
-@event.listens_for(Engine, "before_cursor_execute")
-def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
-    global query_count
-    query_count += 1
-    print(f"Query #{query_count}: {statement}")
+# Usage
+monitoring = SQLMonitoringMiddleware()
+monitoring.setup_monitoring(engine)
 ```
 
 :::
@@ -445,37 +618,117 @@ def receive_before_cursor_execute(conn, cursor, statement, parameters, context, 
 
 ### Patterns d'optimisation
 
-::: details Pattern Repository avec chargement optimisé
+::: details Repository Pattern avec chargement optimisé
+
 ```python
-class UserRepository:
-    def __init__(self, session):
-        self.session = session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload, joinedload, load_only
+
+class CoreUserRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
     
-    def get_user_with_todos(self, user_id: int) -> User:
-        return self.session.query(User).options(
-            selectinload(User.todos)
-        ).filter(User.id == user_id).first()
+    async def get_by_id(self, user_id: str) -> CoreUser | None:
+        """Récupération basique d'un utilisateur"""
+        result = await self.db.execute(
+            select(CoreUser).where(CoreUser.id == user_id)
+        )
+        return result.scalars().first()
     
-    def get_users_summary(self) -> List[User]:
-        return self.session.query(User).options(
-            load_only(User.id, User.username),
-            joinedload(User.profile).load_only(Profile.avatar_url)
-        ).all()
+    async def get_with_groups(self, user_id: str) -> CoreUser | None:
+        """Utilisateur avec ses groupes"""
+        result = await self.db.execute(
+            select(CoreUser)
+            .where(CoreUser.id == user_id)
+            .options(selectinload(CoreUser.groups))
+        )
+        return result.scalars().first()
+    
+    async def get_with_full_profile(self, user_id: str) -> CoreUser | None:
+        """Utilisateur avec profil complet (one-to-one)"""
+        result = await self.db.execute(
+            select(CoreUser)
+            .where(CoreUser.id == user_id)
+            .options(joinedload(CoreUser.profile))
+        )
+        return result.scalars().first()
+    
+    async def list_summary(
+        self, 
+        limit: int = 50, 
+        offset: int = 0
+    ) -> list[CoreUser]:
+        """Liste optimisée pour l'affichage"""
+        result = await self.db.execute(
+            select(CoreUser)
+            .options(
+                load_only(CoreUser.id, CoreUser.username, CoreUser.email),
+                joinedload(CoreUser.profile).load_only(CoreUserProfile.avatar_url)
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+        return result.scalars().all()
+    
+    async def search_with_associations(
+        self, 
+        search_term: str
+    ) -> list[CoreUser]:
+        """Recherche avec associations pré-chargées"""
+        result = await self.db.execute(
+            select(CoreUser)
+            .where(CoreUser.username.ilike(f"%{search_term}%"))
+            .options(
+                selectinload(CoreUser.associations),
+                selectinload(CoreUser.groups)
+            )
+        )
+        return result.scalars().all()
 ```
+
 :::
 
 ::: danger Anti-patterns à éviter
+
 ```python
 # ❌ Chargement en boucle
-for user_id in user_ids:
-    user = session.query(User).filter(User.id == user_id).first()
-    process_user(user)
+async def bad_pattern(db: AsyncSession, user_ids: list[str]) -> None:
+    for user_id in user_ids:
+        result = await db.execute(
+            select(CoreUser).where(CoreUser.id == user_id)
+        )
+        user = result.scalars().first()
+        await process_user(user)
 
 # ✅ Chargement en lot
-users = session.query(User).filter(User.id.in_(user_ids)).all()
-for user in users:
-    process_user(user)
+async def good_pattern(db: AsyncSession, user_ids: list[str]) -> None:
+    result = await db.execute(
+        select(CoreUser).where(CoreUser.id.in_(user_ids))
+    )
+    users = result.scalars().all()
+    for user in users:
+        await process_user(user)
+
+# ❌ Accès aux relations sans préchargement
+async def bad_lazy_access(db: AsyncSession) -> None:
+    result = await db.execute(select(CoreUser))
+    users = result.scalars().all()
+    
+    for user in users:
+        print(f"User {user.username} has {len(user.groups)} groups")  # N+1 !
+
+# ✅ Préchargement approprié
+async def good_eager_loading(db: AsyncSession) -> None:
+    result = await db.execute(
+        select(CoreUser).options(selectinload(CoreUser.groups))
+    )
+    users = result.scalars().all()
+    
+    for user in users:
+        print(f"User {user.username} has {len(user.groups)} groups")  # OK !
 ```
+
 :::
 
 ## 📋 Checklist des bonnes pratiques
