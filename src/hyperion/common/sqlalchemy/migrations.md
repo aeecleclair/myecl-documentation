@@ -1,5 +1,5 @@
 ---
-title: Guide des Migrations Alembic
+title: Migrations Alembic
 description: Guide complet pour gérer l'évolution du schéma de base de données avec Alembic
 order: 2
 category:
