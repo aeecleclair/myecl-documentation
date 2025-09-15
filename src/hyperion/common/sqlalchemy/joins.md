@@ -13,7 +13,6 @@ tag:
 
 # Guide des Jointures SQLAlchemy
 
-
 ::: danger Disclaimer
 
 Les noms, propriétés des modèles ne sont pas ceux d'Hyperion mais sont ici présents pour faciliter la compréhension. C'est donc à vous d'adapter votre code en fonction de vos propres modèles.
@@ -27,21 +26,26 @@ Les jointures sont un concept fondamental lors du développement de modules pour
 Ce guide vous accompagnera dans la maîtrise des jointures SQLAlchemy, depuis les concepts de base jusqu'aux techniques avancées d'optimisation.
 
 ::: tip Objectifs du guide
+
 - Comprendre les différents types de jointures
 - Apprendre à optimiser les performances
 - Maîtriser la syntaxe SQLAlchemy
 - Éviter les pièges courants
+
 :::
 
 ## Comprendre les jointures : explicites vs implicites
 
 ::: warning Attention aux performances
+
 Les jointures peuvent rapidement devenir complexes et impacter les performances. Il est crucial de comprendre quand et comment les utiliser efficacement.
+
 :::
 
 SQLAlchemy offre deux approches pour gérer les relations entre entités :
 
 ### 🔍 Jointures explicites
+
 ### 🔄 Jointures implicites (Lazy Loading)
 
 ### 🔍 Jointures explicites
@@ -78,6 +82,7 @@ async def get_user_with_todos(
 :::
 
 **Avantages :**
+
 - ✅ Une seule requête SQL
 - ✅ Performances optimales
 - ✅ Contrôle total sur la requête
@@ -113,7 +118,7 @@ async def get_user(db: AsyncSession, username: str) -> CoreUser | None:
         select(CoreUser).where(CoreUser.username == username)
     )
     user = result.scalars().first()
-    
+
     # Cette ligne déclenche une nouvelle requête SQL
     if user:
         todos = user.todos  # N+1 queries problem!
@@ -123,10 +128,12 @@ async def get_user(db: AsyncSession, username: str) -> CoreUser | None:
 :::
 
 **Avantages :**
+
 - ✅ Simplicité d'utilisation
 - ✅ Charge uniquement les données nécessaires
 
 **Inconvénients :**
+
 - ❌ Problème N+1 queries
 - ❌ Performances imprévisibles
 
@@ -135,21 +142,25 @@ async def get_user(db: AsyncSession, username: str) -> CoreUser | None:
 Le choix entre jointures explicites et implicites dépend de deux critères principaux :
 
 ::: tip Critères de décision
+
 1. **Type de relation** : One-to-one, One-to-many, Many-to-many
 2. **Probabilité d'accès** : Accès certain vs probable aux données liées
+
 :::
 
-| Type de relation | Accès certain | Accès probable | Recommandation |
-|-----------------|---------------|----------------|-----------------|
-| **One-to-one** | `joinedload()` | `selectinload()` | Toujours charger |
-| **One-to-many** | `selectinload()` | `lazy='select'` | Évaluer le cas |
+| Type de relation | Accès certain    | Accès probable   | Recommandation         |
+| ---------------- | ---------------- | ---------------- | ---------------------- |
+| **One-to-one**   | `joinedload()`   | `selectinload()` | Toujours charger       |
+| **One-to-many**  | `selectinload()` | `lazy='select'`  | Évaluer le cas         |
 | **Many-to-many** | `selectinload()` | `lazy='dynamic'` | Pagination recommandée |
 
 ::: details Explication des stratégies de chargement
+
 - **`joinedload()`** : Jointure SQL (LEFT JOIN)
 - **`selectinload()`** : Requête séparée avec IN
 - **`lazy='select'`** : Chargement à la demande (par défaut)
 - **`lazy='dynamic'`** : Retourne une Query au lieu d'une liste
+
 :::
 
 ## 🔗 Relations One-to-One
@@ -157,7 +168,9 @@ Le choix entre jointures explicites et implicites dépend de deux critères prin
 Les relations one-to-one sont idéales pour étendre un modèle principal avec des données optionnelles.
 
 ::: info Exemple concret
+
 Un `User` peut avoir un seul `Profile` détaillé avec photo, bio, etc.
+
 :::
 
 ### Définition des modèles
@@ -168,32 +181,32 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class CoreUser(Base):
     __tablename__ = "core_user"
-    
+
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(index=True, unique=True)
     email: Mapped[str] = mapped_column(index=True, unique=True)
-    
+
     # Relation one-to-one
     profile: Mapped["CoreUserProfile"] = relationship(
-        "CoreUserProfile", 
-        uselist=False, 
+        "CoreUserProfile",
+        uselist=False,
         back_populates="user"
     )
 
 class CoreUserProfile(Base):
     __tablename__ = "core_user_profile"
-    
+
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[str] = mapped_column(
-        ForeignKey("core_user.id"), 
-        unique=True, 
+        ForeignKey("core_user.id"),
+        unique=True,
         index=True
     )
     bio: Mapped[str | None] = mapped_column(Text)
     avatar_url: Mapped[str | None]
-    
+
     user: Mapped["CoreUser"] = relationship(
-        "CoreUser", 
+        "CoreUser",
         back_populates="profile"
     )
 ```
@@ -216,11 +229,11 @@ async def get_user_with_profile(
         .options(joinedload(CoreUser.profile))
     )
     user = result.scalars().first()
-    
+
     # Accès au profil sans requête supplémentaire
     if user and user.profile:
         bio = user.profile.bio
-    
+
     return user
 ```
 
@@ -236,18 +249,20 @@ async def get_user_lazy(
         select(CoreUser).where(CoreUser.username == username)
     )
     user = result.scalars().first()
-    
+
     # Cette ligne déclenche une deuxième requête SQL
     if user:
         profile = user.profile  # Peut être None
-    
+
     return user
 ```
 
 :::
 
 ::: tip Bonne pratique
+
 Pour les relations one-to-one, utilisez toujours `joinedload()` car le coût de la jointure est minimal et évite le problème N+1.
+
 :::
 
 ## 📚 Relations One-to-Many
@@ -255,7 +270,9 @@ Pour les relations one-to-one, utilisez toujours `joinedload()` car le coût de 
 Les relations one-to-many sont les plus courantes. Un parent peut avoir plusieurs enfants.
 
 ::: info Exemple concret
+
 Un `CoreUser` peut avoir plusieurs `CoreAssociation` (adhésions à des associations).
+
 :::
 
 ### Définition des modèles
@@ -266,10 +283,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class CoreUser(Base):
     __tablename__ = "core_user"
-    
+
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(index=True, unique=True)
-    
+
     # Relation one-to-many
     associations: Mapped[list["CoreAssociation"]] = relationship(
         "CoreAssociation",
@@ -279,12 +296,12 @@ class CoreUser(Base):
 
 class CoreAssociation(Base):
     __tablename__ = "core_association"
-    
+
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("core_user.id"), index=True)
     name: Mapped[str] = mapped_column(index=True)
     is_active: Mapped[bool] = mapped_column(default=True)
-    
+
     user: Mapped["CoreUser"] = relationship(
         "CoreUser",
         back_populates="associations"
@@ -305,11 +322,11 @@ async def get_users_with_associations(
     result = await db.execute(
         select(CoreUser).options(selectinload(CoreUser.associations))
     )
-    
+
     # Génère 2 requêtes optimisées :
     # 1. SELECT core_user.*
     # 2. SELECT core_association.* WHERE user_id IN (?, ?, ?, ...)
-    
+
     return result.scalars().all()
 ```
 
@@ -351,12 +368,13 @@ async def get_users_with_active_associations(
 :::
 
 ::: warning Attention au N+1
+
 ```python
 # ❌ Problème N+1 - évitez ceci !
 async def bad_example(db: AsyncSession) -> None:
     result = await db.execute(select(CoreUser))
     users = result.scalars().all()  # 1 requête
-    
+
     for user in users:
         print(len(user.associations))  # N requêtes supplémentaires !
 
@@ -366,10 +384,11 @@ async def good_example(db: AsyncSession) -> None:
         select(CoreUser).options(selectinload(CoreUser.associations))
     )
     users = result.scalars().all()
-    
+
     for user in users:
         print(len(user.associations))  # Pas de requête supplémentaire
 ```
+
 :::
 
 ## 🔀 Relations Many-to-Many
@@ -377,7 +396,9 @@ async def good_example(db: AsyncSession) -> None:
 Les relations many-to-many nécessitent une table d'association et demandent une attention particulière.
 
 ::: info Exemple concret
+
 Un `CoreUser` peut appartenir à plusieurs `CoreGroup`, et un `CoreGroup` peut contenir plusieurs `CoreUser`.
+
 :::
 
 ### Définition des modèles
@@ -388,7 +409,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Table d'association
 core_membership = Table(
-    "core_membership", 
+    "core_membership",
     Base.metadata,
     mapped_column("user_id", ForeignKey("core_user.id"), primary_key=True),
     mapped_column("group_id", ForeignKey("core_group.id"), primary_key=True),
@@ -396,10 +417,10 @@ core_membership = Table(
 
 class CoreUser(Base):
     __tablename__ = "core_user"
-    
+
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(index=True, unique=True)
-    
+
     # Relation many-to-many
     groups: Mapped[list["CoreGroup"]] = relationship(
         "CoreGroup",
@@ -410,11 +431,11 @@ class CoreUser(Base):
 
 class CoreGroup(Base):
     __tablename__ = "core_group"
-    
+
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(index=True, unique=True)
     description: Mapped[str | None]
-    
+
     members: Mapped[list["CoreUser"]] = relationship(
         "CoreUser",
         secondary="core_membership",
@@ -466,34 +487,34 @@ from datetime import datetime
 # Pour stocker des métadonnées sur la relation
 class CoreMembership(Base):
     __tablename__ = "core_membership"
-    
+
     user_id: Mapped[str] = mapped_column(
-        ForeignKey("core_user.id"), 
+        ForeignKey("core_user.id"),
         primary_key=True
     )
     group_id: Mapped[str] = mapped_column(
-        ForeignKey("core_group.id"), 
+        ForeignKey("core_group.id"),
         primary_key=True
     )
     joined_date: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
     role: Mapped[str] = mapped_column(default="member")
-    
+
     user: Mapped["CoreUser"] = relationship(
-        "CoreUser", 
+        "CoreUser",
         back_populates="group_memberships"
     )
     group: Mapped["CoreGroup"] = relationship(
-        "CoreGroup", 
+        "CoreGroup",
         back_populates="user_memberships"
     )
 
 class CoreUser(Base):
     group_memberships: Mapped[list["CoreMembership"]] = relationship(
-        "CoreMembership", 
+        "CoreMembership",
         back_populates="user",
         default_factory=list,
     )
-    
+
     @property
     def groups(self) -> list[CoreGroup]:
         return [membership.group for membership in self.group_memberships]
@@ -517,9 +538,11 @@ async def get_user_with_membership_details(
 :::
 
 ::: tip Optimisation many-to-many
+
 - Utilisez `lazy='dynamic'` pour de grandes collections
 - Considérez l'Association Object Pattern pour les métadonnées
 - Toujours paginer les résultats en production
+
 :::
 
 ## 🚀 Techniques avancées et bonnes pratiques
@@ -592,13 +615,13 @@ class SQLMonitoringMiddleware:
     def __init__(self):
         self.query_count = 0
         self.total_time = 0
-    
+
     def setup_monitoring(self, engine):
         @event.listens_for(engine, "before_cursor_execute")
         def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
             context._query_start_time = time.time()
             self.query_count += 1
-            
+
         @event.listens_for(engine, "after_cursor_execute")
         def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
             total = time.time() - context._query_start_time
@@ -624,14 +647,14 @@ from sqlalchemy.orm import selectinload, joinedload, load_only
 class CoreUserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
-    
+
     async def get_by_id(self, user_id: str) -> CoreUser | None:
         """Récupération basique d'un utilisateur"""
         result = await self.db.execute(
             select(CoreUser).where(CoreUser.id == user_id)
         )
         return result.scalars().first()
-    
+
     async def get_with_groups(self, user_id: str) -> CoreUser | None:
         """Utilisateur avec ses groupes"""
         result = await self.db.execute(
@@ -640,7 +663,7 @@ class CoreUserRepository:
             .options(selectinload(CoreUser.groups))
         )
         return result.scalars().first()
-    
+
     async def get_with_full_profile(self, user_id: str) -> CoreUser | None:
         """Utilisateur avec profil complet (one-to-one)"""
         result = await self.db.execute(
@@ -649,10 +672,10 @@ class CoreUserRepository:
             .options(joinedload(CoreUser.profile))
         )
         return result.scalars().first()
-    
+
     async def list_summary(
-        self, 
-        limit: int = 50, 
+        self,
+        limit: int = 50,
         offset: int = 0
     ) -> list[CoreUser]:
         """Liste optimisée pour l'affichage"""
@@ -666,9 +689,9 @@ class CoreUserRepository:
             .offset(offset)
         )
         return result.scalars().all()
-    
+
     async def search_with_associations(
-        self, 
+        self,
         search_term: str
     ) -> list[CoreUser]:
         """Recherche avec associations pré-chargées"""
@@ -710,7 +733,7 @@ async def good_pattern(db: AsyncSession, user_ids: list[str]) -> None:
 async def bad_lazy_access(db: AsyncSession) -> None:
     result = await db.execute(select(CoreUser))
     users = result.scalars().all()
-    
+
     for user in users:
         print(f"User {user.username} has {len(user.groups)} groups")  # N+1 !
 
@@ -720,7 +743,7 @@ async def good_eager_loading(db: AsyncSession) -> None:
         select(CoreUser).options(selectinload(CoreUser.groups))
     )
     users = result.scalars().all()
-    
+
     for user in users:
         print(f"User {user.username} has {len(user.groups)} groups")  # OK !
 ```
@@ -730,6 +753,7 @@ async def good_eager_loading(db: AsyncSession) -> None:
 ## 📋 Checklist des bonnes pratiques
 
 ::: tip Checklist performance
+
 - [ ] **Identifiez vos patterns d'accès** avant de choisir la stratégie
 - [ ] **Utilisez `selectinload()`** pour les relations one-to-many modérées
 - [ ] **Utilisez `joinedload()`** pour les relations one-to-one
@@ -738,11 +762,14 @@ async def good_eager_loading(db: AsyncSession) -> None:
 - [ ] **Mesurez les performances** avec des outils de profiling
 - [ ] **Évitez les boucles** avec chargement lazy
 - [ ] **Utilisez `load_only()`** pour limiter les colonnes chargées
+
 :::
 
 ::: warning Points d'attention
+
 - Les jointures peuvent exploser la taille des résultats
 - Le lazy loading peut créer des problèmes N+1
 - Les relations many-to-many nécessitent une pagination
 - Testez toujours avec des données réalistes
+
 :::

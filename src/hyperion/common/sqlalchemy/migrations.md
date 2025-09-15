@@ -21,14 +21,18 @@ Les migrations sont essentielles pour gérer l'évolution du schéma de base de 
 Ce guide vous accompagnera dans la maîtrise d'Alembic, l'outil de migration de référence pour SQLAlchemy.
 
 ::: tip Objectifs du guide
+
 - Comprendre le fonctionnement des migrations Alembic
 - Maîtriser les commandes essentielles
 - Appliquer les bonnes pratiques
 - Résoudre les problèmes courants
+
 :::
 
 ::: info Fonctionnement d'Alembic
+
 Alembic génère des fichiers de migration en comparant vos modèles SQLAlchemy avec l'état actuel de la base de données. Ces migrations sont ensuite appliquées séquentiellement pour maintenir la cohérence du schéma.
+
 :::
 
 ## 🚀 Démarrage rapide
@@ -75,7 +79,9 @@ alembic downgrade -1
 ```
 
 ::: warning Attention en production
+
 Les migrations vers le bas (`downgrade`) peuvent entraîner une perte de données. Testez toujours sur un environnement de développement avant !
+
 :::
 
 ### 📝 Création de migrations
@@ -106,7 +112,9 @@ alembic revision --depends-on ae1027a6acf -m "Merge de deux branches"
 :::
 
 ::: tip Convention de nommage
+
 Utilisez des messages descriptifs et en français : `"Ajouter table CoreEvent"`, `"Modifier contrainte unique sur username"`, etc.
+
 :::
 
 ### 🔍 Inspection et historique
@@ -149,7 +157,9 @@ alembic check
 ```
 
 ::: danger Commandes dangereuses
+
 `stamp` et `stamp --purge` modifient l'état d'Alembic sans appliquer les changements réels. Utilisez uniquement en cas de problème et après backup !
+
 :::
 
 ## 📋 Bonnes pratiques
@@ -157,17 +167,20 @@ alembic check
 ### ✅ Workflow recommandé
 
 ::: tip Processus de migration standard
+
 1. **Modifiez vos modèles** SQLAlchemy
 2. **Générez la migration** avec `alembic revision --autogenerate`
 3. **Reviewez le fichier** généré avant de l'appliquer
 4. **Testez sur un environnement** de développement
 5. **Appliquez en production** avec prudence
+
 :::
 
 ### 🎯 Règles d'or
 
-::: details Compatibilité SQLite
-Pour que les migrations soient compatibles avec SQLite, les commandes `alter` doivent être encapsulées dans un contexte `batch_alter_table` :
+::: details
+
+Compatibilité SQLite Pour que les migrations soient compatibles avec SQLite, les commandes `alter` doivent être encapsulées dans un contexte `batch_alter_table` :
 
 ```python
 # ✅ Compatible SQLite
@@ -177,31 +190,38 @@ with op.batch_alter_table("core_user") as batch_op:
 # ❌ Incompatible SQLite
 op.add_column('core_user', sa.Column('new_field', sa.String(50)))
 ```
+
 :::
 
 ::: details Convention de nommage
+
 Les fichiers de migration suivent la convention : `{révision}_{message}.py`
 
 **Exemples de bons messages :**
+
 - `"ajouter_table_core_event"`
-- `"modifier_contrainte_unique_username"`  
+- `"modifier_contrainte_unique_username"`
 - `"supprimer_colonne_deprecated_field"`
 
 **À éviter :**
+
 - Messages trop vagues : `"update"`, `"fix"`
 - Messages en anglais inconsistants
 - Messages sans contexte
+
 :::
 
 ### 🔧 Révision systématique
 
 ::: warning Toujours réviser les migrations auto-générées
+
 Alembic peut parfois générer des migrations incorrectes ou incomplètes. Vérifiez systématiquement :
 
 - **Les suppressions de colonnes** ne sont pas des renommages
 - **Les types de données** sont corrects
 - **Les contraintes** sont bien définies
 - **L'ordre des opérations** est logique
+
 :::
 
 ### 💾 Migrations de données
@@ -227,7 +247,7 @@ def upgrade():
         batch_op.add_column(
             sa.Column('is_active', sa.Boolean(), server_default=sa.true())
         )
-    
+
     # 2. Migrer les données existantes si nécessaire
     connection = op.get_bind()
     connection.execute(
@@ -259,13 +279,13 @@ def upgrade():
         sa.Column('description', sa.Text()),
         sa.Column('event_date', sa.DateTime(), nullable=False),
     )
-    
+
     # 2. Migrer les données
     connection = op.get_bind()
-    
+
     # Récupérer les données de l'ancienne table
     result = connection.execute(sa.text("SELECT * FROM core_event"))
-    
+
     for row in result:
         # Transformer et insérer dans la nouvelle table
         connection.execute(
@@ -280,7 +300,7 @@ def upgrade():
                 "date": row.scheduled_date,
             }
         )
-    
+
     # 3. Supprimer l'ancienne table et renommer
     op.drop_table('core_event')
     op.rename_table('core_event_new', 'core_event')
@@ -293,12 +313,14 @@ def upgrade():
 ::: details Stratégie multi-environnements
 
 **Développement :**
+
 ```bash
 # Auto-génération fréquente pour tester
 alembic revision --autogenerate -m "test_feature_xyz"
 ```
 
 **Staging :**
+
 ```bash
 # Test des migrations avant production
 alembic upgrade head
@@ -306,6 +328,7 @@ alembic history  # Vérifier l'état
 ```
 
 **Production :**
+
 ```bash
 # Backup avant migration !
 pg_dump hyperion_prod > backup_$(date +%Y%m%d_%H%M%S).sql
@@ -313,6 +336,7 @@ pg_dump hyperion_prod > backup_$(date +%Y%m%d_%H%M%S).sql
 # Migration avec logging
 alembic upgrade head --verbose
 ```
+
 :::
 
 ### 🛡️ Migrations sûres
@@ -320,22 +344,26 @@ alembic upgrade head --verbose
 ::: details Changements sans risque vs. risqués
 
 **✅ Changements sûrs :**
+
 - Ajouter une colonne nullable
 - Ajouter un index
 - Ajouter une table
 - Ajouter une contrainte de validation (avec `NOT VALID`)
 
 **⚠️ Changements risqués :**
+
 - Supprimer une colonne
 - Modifier le type d'une colonne
 - Ajouter une contrainte NOT NULL
 - Renommer une table/colonne
 
 **🔒 Pour les changements risqués :**
+
 1. **Déploiement en 2 étapes** (ajout + suppression séparés)
 2. **Fenêtre de maintenance** planifiée
 3. **Rollback plan** testé
 4. **Monitoring** accru post-déploiement
+
 :::
 
 ## 🧩 Exemples de migrations courantes
@@ -361,13 +389,13 @@ def upgrade():
         batch_op.alter_column(
             "role",
             existing_type=sa.Enum(
-                "admin", 
-                "member", 
+                "admin",
+                "member",
                 name="core_user_role"
             ),
             type_=sa.Enum(
                 "admin",
-                "member", 
+                "member",
                 "moderator",    # Nouvelle valeur
                 "contributor",  # Nouvelle valeur
                 name="core_user_role",
@@ -411,7 +439,7 @@ def upgrade():
         sa.Column(
             'membership_type',
             postgresql.ENUM(
-                name="available_association_membership", 
+                name="available_association_membership",
                 create_type=False  # Important : ne crée pas l'Enum
             ),
             nullable=True
@@ -439,17 +467,17 @@ def upgrade():
         batch_op.add_column(
             sa.Column('email', sa.String(255), nullable=True)
         )
-    
+
     # 2. Remplir avec des données par défaut si nécessaire
     connection = op.get_bind()
     connection.execute(
         sa.text("""
-            UPDATE core_user 
-            SET email = username || '@example.com' 
+            UPDATE core_user
+            SET email = username || '@example.com'
             WHERE email IS NULL
         """)
     )
-    
+
     # 3. Ajouter les contraintes
     with op.batch_alter_table("core_user") as batch_op:
         batch_op.alter_column('email', nullable=False)
@@ -480,7 +508,7 @@ def upgrade():
 def downgrade():
     with op.batch_alter_table("core_event") as batch_op:
         batch_op.alter_column(
-            'created_at', 
+            'created_at',
             new_column_name='created_date'
         )
 ```
@@ -509,7 +537,7 @@ def upgrade():
         sa.Column('avatar_url', sa.String(500)),
         sa.Column('created_at', sa.DateTime(), server_default=sa.func.now()),
     )
-    
+
     # 2. Ajouter la clé étrangère
     with op.batch_alter_table("core_user_profile") as batch_op:
         batch_op.create_foreign_key(
@@ -520,7 +548,7 @@ def upgrade():
             ondelete='CASCADE'
         )
         batch_op.create_unique_constraint(
-            'uq_core_user_profile_user_id', 
+            'uq_core_user_profile_user_id',
             ['user_id']
         )
 
@@ -545,11 +573,11 @@ def upgrade():
         sa.Column('joined_at', sa.DateTime(), server_default=sa.func.now()),
         sa.Column('role', sa.String(50), server_default='member'),
     )
-    
+
     # 2. Clé primaire composite
     with op.batch_alter_table("core_membership") as batch_op:
         batch_op.create_primary_key('pk_core_membership', ['user_id', 'group_id'])
-        
+
         # 3. Clés étrangères
         batch_op.create_foreign_key(
             'fk_core_membership_user_id',
@@ -557,7 +585,7 @@ def upgrade():
             ondelete='CASCADE'
         )
         batch_op.create_foreign_key(
-            'fk_core_membership_group_id', 
+            'fk_core_membership_group_id',
             'core_group', ['group_id'], ['id'],
             ondelete='CASCADE'
         )
@@ -579,30 +607,30 @@ Revision ID: add_indexes_001
 def upgrade():
     # Index simple pour les recherches
     op.create_index(
-        'idx_core_user_username', 
-        'core_user', 
+        'idx_core_user_username',
+        'core_user',
         ['username']
     )
-    
+
     # Index composite pour les requêtes filtrées
     op.create_index(
         'idx_core_event_date_status',
         'core_event',
         ['event_date', 'status']
     )
-    
+
     # Index partiel (PostgreSQL seulement)
     if op.get_context().dialect.name == 'postgresql':
         op.execute("""
-            CREATE INDEX idx_core_user_active 
-            ON core_user (created_at) 
+            CREATE INDEX idx_core_user_active
+            ON core_user (created_at)
             WHERE is_active = true
         """)
 
 def downgrade():
     op.drop_index('idx_core_user_username')
     op.drop_index('idx_core_event_date_status')
-    
+
     if op.get_context().dialect.name == 'postgresql':
         op.execute("DROP INDEX IF EXISTS idx_core_user_active")
 ```
@@ -620,23 +648,23 @@ def upgrade():
         # Boolean avec défaut serveur
         batch_op.add_column(
             sa.Column(
-                'is_active', 
-                sa.Boolean(), 
+                'is_active',
+                sa.Boolean(),
                 server_default=sa.sql.true(),  # ✅ Correct pour SQLAlchemy
                 nullable=False
             )
         )
-        
+
         # DateTime avec défaut serveur
         batch_op.add_column(
             sa.Column(
-                'last_login', 
+                'last_login',
                 sa.DateTime(),
                 server_default=sa.func.now(),
                 nullable=True
             )
         )
-        
+
         # UUID avec défaut serveur (PostgreSQL)
         if op.get_context().dialect.name == 'postgresql':
             batch_op.add_column(
@@ -665,30 +693,33 @@ def downgrade():
 **Problème :** `sqlalchemy.exc.IntegrityError: constraint failed`
 
 **Causes possibles :**
+
 - Contrainte NOT NULL sur une colonne avec des valeurs NULL existantes
 - Contrainte UNIQUE violée par des données existantes
 - Clé étrangère pointant vers un enregistrement inexistant
 
 **Solutions :**
+
 ```python
 def upgrade():
     # ❌ Échoue si des données existent
     op.add_column('core_user', sa.Column('email', sa.String(), nullable=False))
-    
+
     # ✅ Solution en 2 étapes
     # 1. Ajouter la colonne nullable
     op.add_column('core_user', sa.Column('email', sa.String(), nullable=True))
-    
+
     # 2. Remplir les données manquantes
     connection = op.get_bind()
     connection.execute(
         sa.text("UPDATE core_user SET email = username || '@temp.local' WHERE email IS NULL")
     )
-    
+
     # 3. Appliquer la contrainte NOT NULL
     with op.batch_alter_table("core_user") as batch_op:
         batch_op.alter_column('email', nullable=False)
 ```
+
 :::
 
 ::: details État de migration incohérent
@@ -696,6 +727,7 @@ def upgrade():
 **Problème :** `FAILED: Target database is not up to date`
 
 **Diagnostic :**
+
 ```bash
 # Vérifier l'état actuel
 alembic current
@@ -706,6 +738,7 @@ alembic heads
 ```
 
 **Solutions :**
+
 ```bash
 # Solution 1 : Appliquer les migrations manquantes
 alembic upgrade head
@@ -716,6 +749,7 @@ alembic stamp head
 # Solution 3 : En cas de corruption de l'historique
 alembic stamp --purge head
 ```
+
 :::
 
 ::: details Conflits de fusion de branches
@@ -723,11 +757,13 @@ alembic stamp --purge head
 **Problème :** `Multiple heads detected`
 
 **Diagnostic :**
+
 ```bash
 alembic heads  # Montre plusieurs têtes
 ```
 
 **Solution :**
+
 ```bash
 # 1. Créer une migration de fusion
 alembic merge -m "Fusionner branches feature-A et feature-B" head1 head2
@@ -735,6 +771,7 @@ alembic merge -m "Fusionner branches feature-A et feature-B" head1 head2
 # 2. Ou utiliser les dépendances lors de la création
 alembic revision --depends-on head1,head2 -m "Migration après fusion"
 ```
+
 :::
 
 ### 🔄 Migrations complexes
@@ -744,6 +781,7 @@ alembic revision --depends-on head1,head2 -m "Migration après fusion"
 Pour les applications critiques, certaines migrations doivent être déployées sans interruption :
 
 **Étape 1 : Préparation**
+
 ```python
 """Phase 1: Ajouter nouvelle colonne
 
@@ -754,7 +792,7 @@ def upgrade():
     # Ajouter la nouvelle colonne nullable
     with op.batch_alter_table("core_user") as batch_op:
         batch_op.add_column(sa.Column('new_field', sa.String(100), nullable=True))
-    
+
     # Pas de modification du code applicatif encore
 
 def downgrade():
@@ -763,10 +801,12 @@ def downgrade():
 ```
 
 **Étape 2 : Déploiement applicatif**
+
 - Déployer le code qui écrit dans les deux colonnes (ancienne + nouvelle)
 - Les lectures se font encore sur l'ancienne colonne
 
 **Étape 3 : Migration des données**
+
 ```python
 """Phase 2: Migrer les données existantes
 
@@ -785,6 +825,7 @@ def downgrade():
 ```
 
 **Étape 4 : Finalisation**
+
 ```python
 """Phase 3: Finaliser la migration
 
@@ -803,6 +844,7 @@ def downgrade():
         batch_op.alter_column('new_field', nullable=True)
         # Recréer old_field si supprimée
 ```
+
 :::
 
 ::: details Migration de grandes tables
@@ -817,30 +859,30 @@ Revision ID: large_table_001
 
 def upgrade():
     connection = op.get_bind()
-    
+
     # Migration par batch de 10 000 enregistrements
     batch_size = 10000
     offset = 0
-    
+
     while True:
         result = connection.execute(
             sa.text(f"""
-                UPDATE core_user 
-                SET processed = true 
+                UPDATE core_user
+                SET processed = true
                 WHERE id IN (
-                    SELECT id FROM core_user 
-                    WHERE processed IS NULL 
+                    SELECT id FROM core_user
+                    WHERE processed IS NULL
                     LIMIT {batch_size}
                 )
             """)
         )
-        
+
         if result.rowcount == 0:
             break
-            
+
         print(f"Traité {offset + result.rowcount} enregistrements")
         offset += result.rowcount
-        
+
         # Commit intermédiaire pour éviter les verrous longs
         connection.commit()
 
@@ -848,6 +890,7 @@ def downgrade():
     connection = op.get_bind()
     connection.execute(sa.text("UPDATE core_user SET processed = NULL"))
 ```
+
 :::
 
 ### 🛠️ Outils de debugging
@@ -862,16 +905,16 @@ logger = logging.getLogger(__name__)
 
 def upgrade():
     logger.info("Début de la migration complexe")
-    
+
     connection = op.get_bind()
-    
+
     # Compter les enregistrements avant
     result = connection.execute(sa.text("SELECT COUNT(*) FROM core_user"))
     count_before = result.scalar()
     logger.info(f"Enregistrements avant migration: {count_before}")
-    
+
     # Votre migration...
-    
+
     # Compter après
     result = connection.execute(sa.text("SELECT COUNT(*) FROM core_user WHERE email IS NOT NULL"))
     count_after = result.scalar()
@@ -879,6 +922,7 @@ def upgrade():
 ```
 
 **Commandes de debug :**
+
 ```bash
 # Mode verbose
 alembic upgrade head --verbose
@@ -889,11 +933,13 @@ alembic upgrade head --sql
 # Créer une migration avec du SQL personnalisé
 alembic upgrade head --tag "production-deployment-2024-01"
 ```
+
 :::
 
 ## 🎯 Checklist pré-production
 
 ::: tip Checklist de déploiement
+
 - [ ] **Backup complet** de la base de données
 - [ ] **Test sur un clone** de la base de production
 - [ ] **Validation** des données après migration
@@ -901,33 +947,41 @@ alembic upgrade head --tag "production-deployment-2024-01"
 - [ ] **Fenêtre de maintenance** planifiée si nécessaire
 - [ ] **Monitoring** renforcé post-déploiement
 - [ ] **Communication** aux équipes concernées
+
 :::
 
 ::: warning Points critiques
+
 - **Jamais de migration destructive** sans backup
 - **Tester le rollback** avant le déploiement
 - **Prévoir du temps supplémentaire** pour les grandes tables
 - **Surveiller les performances** après déploiement
+
 :::
 
 ::: danger En cas de problème en production
+
 1. **STOP** : Arrêter immédiatement si possible
 2. **ÉVALUER** : Analyser l'impact et les risques
 3. **ROLLBACK** : Utiliser le plan de retour en arrière
 4. **RESTAURER** : Depuis le backup si nécessaire
 5. **POST-MORTEM** : Analyser les causes après résolution
+
 :::
 
 ## 📚 Ressources et références
 
 ::: details Liens utiles
+
 - **[Documentation Alembic officielle](https://alembic.sqlalchemy.org/)**
 - **[Guide des migrations SQLAlchemy](https://docs.sqlalchemy.org/en/14/core/schema.html)**
 - **[Batch operations pour SQLite](https://alembic.sqlalchemy.org/en/latest/batch.html)**
 - **[Migration patterns avancés](https://alembic.sqlalchemy.org/en/latest/cookbook.html)**
+
 :::
 
 ::: tip Commandes de référence rapide
+
 ```bash
 # Créer une migration
 alembic revision --autogenerate -m "Description"
@@ -947,5 +1001,5 @@ alembic downgrade -1
 # Marquer comme appliqué
 alembic stamp head
 ```
-:::
 
+:::

@@ -52,15 +52,18 @@ async def get_user(user_id: str):
 ### 📊 Performance
 
 ::: tip Amélioration typique
+
 - **x10 à x50** plus de requêtes simultanées
 - **-80% d'utilisation CPU** pour les I/O
 - **-90% d'utilisation RAM** (moins de threads)
 - **Latence réduite** sous forte charge
+
 :::
 
 ### 🎯 Cas d'usage Hyperion
 
 **Avant (synchrone) :**
+
 ```
 50 utilisateurs qui consultent leurs événements simultanément
 → 50 threads Python actifs
@@ -68,8 +71,9 @@ async def get_user(user_id: str):
 ```
 
 **Après (asynchrone) :**
+
 ```
-500 utilisateurs qui consultent leurs événements simultanément  
+500 utilisateurs qui consultent leurs événements simultanément
 → 1-2 threads Python actifs
 → Serveur fluide même à 500 utilisateurs
 ```
@@ -104,16 +108,20 @@ L'asynchrone, c'est comme un serveur de restaurant efficace :
 ## 🎯 Quand utiliser l'asynchrone ?
 
 ::: tip Asynchrone recommandé pour
+
 - **Applications web** (FastAPI, Django Async)
 - **APIs REST** avec beaucoup de trafic
 - **Microservices** qui font des appels externes
 - **Applications avec I/O intensives** (DB, fichiers, réseau)
+
 :::
 
 ::: warning Asynchrone non nécessaire pour
+
 - **Scripts de batch** simples
 - **Applications avec très peu d'utilisateurs** (<10 simultanés)
 - **Calculs intensifs** (CPU-bound)
+
 :::
 
 ## 🔄 Migration en une phrase
@@ -121,4 +129,3 @@ L'asynchrone, c'est comme un serveur de restaurant efficace :
 Remplacez `session.query()` par `await db.execute(select())` et ajoutez `async`/`await` partout.
 
 **Résultat :** Votre application Hyperion peut servir 10x plus d'utilisateurs simultanés avec les mêmes ressources serveur.
-
