@@ -14,10 +14,7 @@ category:
 
 # Quoi
 
-Hyperion est le back-end de MyECL, l'application étudiante de l'École Centrale de Lyon. Si vous êtes
-nouveau dans le développement web, pensez au back-end comme au "cerveau" caché derrière une
-application : c'est lui qui gère les données, la logique métier, et fournit les informations au
-front-end (l'interface que voient les utilisateurs).
+Hyperion est le back-end de MyECL, l'application étudiante de l'École Centrale de Lyon. Si vous êtes nouveau dans le développement web, pensez au back-end comme au "cerveau" caché derrière une application : c'est lui qui gère les données, la logique métier, et fournit les informations au front-end (l'interface que voient les utilisateurs).
 
 ```mermaid
 graph LR
@@ -54,10 +51,7 @@ Bordel de Skyrol là-dessous
 
 ## Introduction
 
-Hyperion est le **back-end** de MyECL, l'application étudiante de l'École Centrale de Lyon. Si vous
-êtes nouveau dans le développement web, pensez au back-end comme au "cerveau" caché derrière une
-application : c'est lui qui gère les données, la logique métier, et fournit les informations au
-front-end (l'interface que voient les utilisateurs).
+Hyperion est le **back-end** de MyECL, l'application étudiante de l'École Centrale de Lyon. Si vous êtes nouveau dans le développement web, pensez au back-end comme au "cerveau" caché derrière une application : c'est lui qui gère les données, la logique métier, et fournit les informations au front-end (l'interface que voient les utilisateurs).
 
 ## Pourquoi Hyperion existe-t-il ?
 
@@ -73,8 +67,7 @@ Avant Hyperion, les services numériques d'ECLAIR étaient éparpillés :
 
 ### La solution : un back-end unifié
 
-Hyperion centralise la plupart des services d'ECLAIR dès qu'il est question de gérer des les données
-d'étudiants :
+Hyperion centralise la plupart des services d'ECLAIR dès qu'il est question de gérer des les données d'étudiants :
 
 ```mermaid
 graph TD
@@ -220,8 +213,7 @@ Exemple de réponse
 
 ### API REST
 
-Hyperion expose une **API REST** : un ensemble d'endpoints HTTP qui permettent aux applications
-clientes de :
+Hyperion expose une **API REST** : un ensemble d'endpoints HTTP qui permettent aux applications clientes de :
 
 - **Créer** des données (POST)
 - **Lire** des données (GET)
@@ -274,8 +266,7 @@ graph TD
 
 ## Prochaines étapes
 
-Maintenant que vous comprenez **pourquoi** Hyperion existe et **ce qu'il fait**, nous allons voir
-**comment** il fonctionne :
+Maintenant que vous comprenez **pourquoi** Hyperion existe et **ce qu'il fait**, nous allons voir **comment** il fonctionne :
 
 1. [Les 4 verbes fondamentaux](./les-4-verbes.md) - La base de toute API
 2. [Configuration](./configuration.md) - Comment configurer Hyperion
@@ -283,8 +274,7 @@ Maintenant que vous comprenez **pourquoi** Hyperion existe et **ce qu'il fait**,
 
 ::: tip
 
-N'hésitez pas à poser des questions ! Les anciens de l'association sont là pour vous accompagner
-dans votre apprentissage.
+N'hésitez pas à poser des questions ! Les anciens de l'association sont là pour vous accompagner dans votre apprentissage.
 
 :::
 
@@ -292,8 +282,7 @@ dans votre apprentissage.
 
 ## Une architecture en miroir
 
-L'une des beautés d'Hyperion, c'est que tout repose sur la même structure logique à trois niveaux.
-Ces **4 verbes** se retrouvent partout et facilitent énormément la compréhension du système.
+L'une des beautés d'Hyperion, c'est que tout repose sur la même structure logique à trois niveaux. Ces **4 verbes** se retrouvent partout et facilitent énormément la compréhension du système.
 
 ```mermaid
 graph LR
@@ -373,8 +362,7 @@ DELETE /users/123
 
 ## Les 4 opérations CRUD
 
-CRUD signifie **Create, Read, Update, Delete**. C'est la même logique que HTTP, mais du point de vue
-applicatif.
+CRUD signifie **Create, Read, Update, Delete**. C'est la même logique que HTTP, mais du point de vue applicatif.
 
 ### Create - Créer
 
@@ -631,14 +619,12 @@ Maintenant que vous comprenez cette logique fondamentale, nous pouvons passer à
 
 ::: tip Astuce de développeur
 
-Quand vous travaillez sur Hyperion, pensez toujours en termes de ces 4 verbes. Ça vous aidera à
-structurer votre code et à comprendre celui des autres !
+Quand vous travaillez sur Hyperion, pensez toujours en termes de ces 4 verbes. Ça vous aidera à structurer votre code et à comprendre celui des autres !
 
 :::
 
 ::: info Pour aller plus loin
 
-Cette logique REST est un standard de l'industrie. Les compétences que vous développez avec Hyperion
-sont directement transférables à d'autres projets et frameworks.
+Cette logique REST est un standard de l'industrie. Les compétences que vous développez avec Hyperion sont directement transférables à d'autres projets et frameworks.
 
 :::
