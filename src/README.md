@@ -23,6 +23,11 @@ actions:
     #icon: lightbulb
     link: ./titan/
     type: primary
+  
+  - text: Notification
+    #icon: lightbulb
+    link: ./notification/
+    type: primary
 
   - text: Méta-docs
     #icon: lightbulb
