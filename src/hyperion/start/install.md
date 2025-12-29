@@ -223,9 +223,7 @@ Aucun (pas si lourd, config pas si dure).
 
 @tab SQLite#sqlite
 
-Il n'y a rien à faire,
-
-There is nothing to do, ça marche directement.
+Il n'y a rien à faire, ça marche directement.
 
 @tab PostgreSQL#psql
 
@@ -243,7 +241,7 @@ There is nothing to do, ça marche directement.
 psql -U postgres -c "create database hyperion;"
 ```
 
-::: Démystifions la casse en SQL
+::: tip Démystifions la casse en SQL
 
 Les mots-clefs SQL ne insensibles à la casse par convention.
 Pas besoin d'écrire `CREATE DATABASE hyperion;`
