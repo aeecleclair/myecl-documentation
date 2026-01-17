@@ -143,66 +143,71 @@ Exempe : _loan/providers/item_list_provider.dart_
 
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myecl/auth/providers/oauth2_provider.dart';
-import 'package:myecl/loan/class/item.dart';
-import 'package:myecl/loan/providers/loaner_id_provider.dart';
-import 'package:myecl/loan/repositories/item_repository.dart';
-import 'package:myecl/tools/providers/list_notifier.dart';
+import 'package:titan/loan/class/item.dart';
+import 'package:titan/loan/providers/loaner_id_provider.dart';
+import 'package:titan/loan/repositories/item_repository.dart';
+import 'package:titan/tools/providers/list_notifier.dart';
+import 'package:titan/tools/token_expire_wrapper.dart';
 
 class ItemListNotifier extends ListNotifier<Item> {
-  final ItemRepository _itemrepository = ItemRepository();
-  late final String loanerId;
-  ItemListNotifier({required String token})
-      : super(const AsyncValue.loading()) {
-    _itemrepository.setToken(token);
+  final ItemRepository itemrepository;
+  ItemListNotifier({required this.itemrepository})
+    : super(const AsyncValue.loading());
+
+  Future<AsyncValue<List<Item>>> loadItemList(String id) async {
+    return await loadList(() async => itemrepository.getItemList(id));
   }
 
-  void setId(String id) {
-    loanerId = id;
+  Future<bool> addItem(Item item, String loanerId) async {
+    return await add((i) async => itemrepository.createItem(loanerId, i), item);
   }
 
-  Future<AsyncValue<List<Item>>> loadLoanList() async {
-    return await loadList(() async => _itemrepository.getItemList(loanerId));
-  }
-
-  Future<bool> addItem(Item item) async {
-    return await add(
-        (i) async => _itemrepository.createItem(loanerId, i), item);
-  }
-
-  Future<bool> updateItem(Item item) async {
+  Future<bool> updateItem(Item item, String loanerId) async {
     return await update(
-        (i) async => _itemrepository.updateItem(loanerId, i),
-        (items, item) =>
-            items..[items.indexWhere((i) => i.id == item.id)] = item,
-        item);
+      (i) async => itemrepository.updateItem(loanerId, i),
+      (items, item) => items..[items.indexWhere((i) => i.id == item.id)] = item,
+      item,
+    );
   }
 
-  Future<bool> deleteItem(Item item) async {
+  Future<bool> deleteItem(Item item, String loanerId) async {
     return await delete(
-        (id) async => _itemrepository.deleteItem(loanerId, id),
-        (items, item) => items..removeWhere((i) => i.id == item.id),
-        item.id,
-        item);
+      (id) async => itemrepository.deleteItem(loanerId, id),
+      (items, item) => items..removeWhere((i) => i.id == item.id),
+      item.id,
+      item,
+    );
   }
 
-  Future<AsyncValue<List<Item>>> copy() {
-    return state.when(
-        data: (d) async => AsyncValue.data(d.sublist(0)),
-        error: (e, s) async => AsyncValue.error(e),
-        loading: () async => const AsyncValue.loading());
+  Future<AsyncValue<List<Item>>> copy() async {
+    return state.whenData((d) => d.sublist(0));
+  }
+
+  Future<AsyncValue<List<Item>>> filterItems(String query) async {
+    return state.whenData(
+      (items) => items
+          .where(
+            (item) => item.name.toLowerCase().contains(query.toLowerCase()),
+          )
+          .toList(),
+    );
   }
 }
 
 final itemListProvider =
     StateNotifierProvider<ItemListNotifier, AsyncValue<List<Item>>>((ref) {
-  final token = ref.watch(tokenProvider);
-  final loanerId = ref.watch(loanerIdProvider);
-  ItemListNotifier _itemListNotifier = ItemListNotifier(token: token);
-  _itemListNotifier.setId(loanerId);
-  _itemListNotifier.loadLoanList();
-  return _itemListNotifier;
-});
+      final itemRepository = ref.watch(itemRepositoryProvider);
+      ItemListNotifier itemListNotifier = ItemListNotifier(
+        itemrepository: itemRepository,
+      );
+      tokenExpireWrapperAuth(ref, () async {
+        final loanerId = ref.watch(loanerIdProvider);
+        if (loanerId != "") {
+          await itemListNotifier.loadItemList(loanerId);
+        }
+      });
+      return itemListNotifier;
+    });
 ```
 
 Encore une fois, on hérite de la classe `ListNotifier` pour pouvoir utiliser les méthodes de la classe.
