@@ -1,0 +1,63 @@
+---
+title: Premier pas
+order: 5
+category:
+  - Guide
+---
+
+Bienvenue dans la documentation de Titan, le front-end de MyECL. Ce guide vous aidera à faire vos premiers pas avec Titan et à comprendre ses fonctionnalités de base.
+
+## Qu'est-ce que Titan ?
+
+Titan est une application front-end conçue pour gérer les contenus et les utilisateurs de MyECL à l'exception des services annexes comme la chaine de rentrée et le système d'authentification SSO[^sso-note]. Il utilise l'interface API RESTful d'Hyperion pour interagir avec les données et les services.
+
+[^sso-note]: Pour plus d'informations sur l'authentification Single Sign-On (SSO), voir : /hyperion/authentification-sso/
+
+## Prérequis : Installation de Git
+
+::: warning Vérification
+
+Avant de commencer, assurez-vous que Git est installé sur votre système. Vous pouvez vérifier cela en exécutant la commande suivante dans votre terminal :
+
+```bash
+git --version
+```
+
+Si Git est installé, vous devriez voir quelque chose comme `git version 2.x.x`.
+
+:::
+
+:::tabs
+
+@tab Github Desktop
+
+Si Git n'est pas installé sur votre système, nous vous recommandons d'installer Github Desktop, qui inclut Git et offre une interface utilisateur graphique pour gérer vos dépôts Git. Vous pouvez le télécharger depuis [le site officiel de GitHub Desktop](https://desktop.github.com/).
+
+@tab Fork
+
+Vous pouvez également installer Fork qui est une alternative à Github Desktop plus complète, disponible sur [le site officiel de Fork](https://git-fork.com/).
+
+@tab Git CLI
+
+Si vous préférez utiliser les lignes de commandes uniquement, vous pouvez installer Git en suivant les instructions sur [le site officiel de Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+
+:::
+
+::: tip Configuration initiale
+
+Après l'installation de Git, il est recommandé de configurer votre nom d'utilisateur et votre adresse e-mail :
+
+```bash
+git config --global user.name "Votre Nom"
+git config --global user.email "votre.email@example.com"
+```
+
+:::
+
+## Cloner le dépôt Hyperion
+
+Une fois Git installé et configuré, vous pouvez cloner le dépôt Hyperion en utilisant la commande suivante :
+
+```bash
+git clone https://github.com/aeecleclair/hyperion.git
+```
