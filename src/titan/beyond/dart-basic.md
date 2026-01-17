@@ -253,18 +253,18 @@ category:
   - Stocke une liste d'objects de **_même type_**
   - Ex :
     ```dart
-    var list = [1, 2, 3]; // Dart infère le type List<int>
+    var list = [1, 2, 3]; // Dart infère le type List\<int>
     var list2 = [
         'Car',
         'Boat',
         'Plane',
-    ]; // Dart infère le type List<String>
+    ]; // Dart infère le type List\<String>
     ```
   - On peut spécifier le type
   - Ex :
     ```dart
-    List<int> list = [1, 2, 3];
-    List<String> list2 = [
+    List\<int> list = [1, 2, 3];
+    List\<String> list2 = [
         'Car',
         'Boat',
         'Plane',
@@ -282,7 +282,7 @@ category:
   - Par défaut, les listes sont extensibles, mais on peut les rendre de taille fixe
   - Ex :
     ```dart
-    final fixedLengthList = List<int>.filled(5, 0); // fixedLengthList = [0, 0, 0, 0, 0]
+    final fixedLengthList = List\<int>.filled(5, 0); // fixedLengthList = [0, 0, 0, 0, 0]
     ```
   - On peut changer les valeurs mais ni en ajouter ni en supprimer
 
@@ -290,19 +290,19 @@ category:
     - [i] : Retourne l'élément à la i ème place
     - Ex :
       ```dart
-      List<int> list = [1, 2, 3];
+      List\<int> list = [1, 2, 3];
       var l = list[0]; // l = 1
       ```
     - ... : Opérateur de répartition, décompose la liste en ses éléments
     - Ex :
       ```dart
-      List<int> list = [1, 2, 3];
+      List\<int> list = [1, 2, 3];
       var list2 = [0, ...list]; // list2 = [0, 1, 2, 3]
       ```
     - ...? : Opérateur de répartition avec une vérification que la liste n'est pas vide, décompose la liste en ses éléments
     - Ex :
       ```dart
-      List<int> list = [];
+      List\<int> list = [];
       var list2 = [0, ...list]; // Lève une erreur car la liste est vide
       var list2 = [0, ...?list]; // list2 = [0]
       ```
@@ -366,7 +366,7 @@ category:
         var b = lst.length; // b = 5
         ```
 
-    - reversed → Iterable<E> :
+    - reversed → Iterable\<E> :
       - Read-Only
       - Renverse la liste
       - Il faut reconvertir en liste après
@@ -384,7 +384,7 @@ category:
         lst.add(5); // lst = [1, 2, 3, 4, 5]
         ```
 
-    - addAll(Iterable<E> iterable) → void :
+    - addAll(Iterable\<E> iterable) → void :
       - Ajoute tous les éléments à la liste
       - Ex :
         ```dart
@@ -400,12 +400,12 @@ category:
         var b = sportsList.any((e) => e == 'cricket'); // b = true
         ```
 
-    - asMap → Map<int, E> :
+    - asMap → Map\<int, E> :
       - Transforme la liste en dictionnaire
       - Ex :
         ```dart
-        List<String> sports = ['cricket', 'football', 'tennis', 'baseball'];
-        Map<int, String> map = sports.asMap();
+        List\<String> sports = ['cricket', 'football', 'tennis', 'baseball'];
+        Map\<int, String> map = sports.asMap();
         // map = {0: cricket, 1: football, 2: tennis, 3: baseball}
         ```
 
@@ -441,7 +441,7 @@ category:
         var b = sportsList.every((e) => e.startsWith('a')); // b = false
         ```
 
-    - expand<T>(Iterable<T> toElements(E element)) → Iterable<T> :
+    - expand\<T>(Iterable\<T> toElements(E element)) → Iterable\<T> :
       - Retourne un itérable des résultats de la fonction donnée
       - expand peut changer la forme et la longueur de la liste
       - Ex :
@@ -472,7 +472,7 @@ category:
         var c = sList.firstWhere((i) => i.length > 3); // c = 'three'
         ```
 
-    - fold<T>(T initialValue, T combine(T previousValue, E element)) → T :
+    - fold\<T>(T initialValue, T combine(T previousValue, E element)) → T :
       - Applique la fonction donnée aux élément de la liste avec comme valeur initiale celle donnée
       - Ex :
         ```dart
@@ -480,7 +480,7 @@ category:
         var res = lst.fold(5, (i, j) => i + j); // res = 5 + 1 + 2 + 3 + 4 + 5 = 20
         ```
 
-    - followedBy(Iterable<E> other) → Iterable<E> :
+    - followedBy(Iterable\<E> other) → Iterable\<E> :
       - Ajoute la liste donnée à la liste
       - Ex :
         ```dart
@@ -498,7 +498,7 @@ category:
         fruits.forEach((fruit) => print(fruit)); // Affiche dans la console les fruits un par un
         ```
 
-    - getRange(int start, int end) → Iterable<E> :
+    - getRange(int start, int end) → Iterable\<E> :
       - Retourne les éléments de la liste contenue entre l'indice de départ (inclus) et celui de fin (exclus) sous forme d'itérable
       - \<!> Attention au alias
       - \<!> Il faut reconvertir en liste après
@@ -541,7 +541,7 @@ category:
         var b = lst.insert(2, 7) // b = [1, 2, 7, 3, 4, 5]
         ```
 
-    - insertAll(int index, Iterable<E> iterable) → void :
+    - insertAll(int index, Iterable\<E> iterable) → void :
       - Ajoute les éléments donnés à l'index donnés
       - Ex :
         ```dart
@@ -587,7 +587,7 @@ category:
         var c = sList.lastWhere((i) => i.length > 3); // c = 'four'
         ```
 
-    - map<T>(T toElement(E e)) → Iterable<T> :
+    - map\<T>(T toElement(E e)) → Iterable\<T> :
       - Applique la fonction donnée et retourne l'itérable des résultats
       - Il faut reconvertir en liste après
       - Ex :
@@ -647,7 +647,7 @@ category:
         lst.removeWhere((i) => i < 3); // lst = [3, 4, 5]
         ```
 
-    - replaceRange(int start, int end, Iterable<E> replacements) → void :
+    - replaceRange(int start, int end, Iterable\<E> replacements) → void :
       - Remplace les éléments de la liste par les éléments donnés.
       - Il faut également donner l'indice de départ et de fin pour le remplacement.
       - Ex :
@@ -671,7 +671,7 @@ category:
         lst.removeWhere((i) => i < 3); // lst = [3, 4, 5]
         ```
 
-    - setAll(int index, Iterable<E> iterable) → void :
+    - setAll(int index, Iterable\<E> iterable) → void :
       - Change les éléments à partir de l'indice donné
       - Ex :
         ```dart
@@ -679,7 +679,7 @@ category:
         lst.setAll(1, [6, 7]); // lst = [1, 6, 7, 4, 5]
         ```
 
-    - setRange(int start, int end, Iterable<E> iterable, [int skipCount = 0]) → void :
+    - setRange(int start, int end, Iterable\<E> iterable, [int skipCount = 0]) → void :
       - Change les éléments entre l'indice de départ (inclus) et celui d'arrivée (exclus) par ceux donné en excluant le nombre donné
       - Ex :
         ```dart
@@ -707,7 +707,7 @@ category:
         var b = mList.singleWhere((i) => i == 3); // b = 3
         ```
 
-    - skip(int count) → Iterable<E> :
+    - skip(int count) → Iterable\<E> :
       - Retourne un itérable contenant les éléments entre l'indice donné et la fin de la liste
       - Il faut reconvertir en liste après
       - Ex :
@@ -716,7 +716,7 @@ category:
         var b = sportsList.skip(2).toList(); // b = ['football']
         ```
 
-    - skipWhile(bool test(E value)) → Iterable<E> :
+    - skipWhile(bool test(E value)) → Iterable\<E> :
       - Retourne un itérable contenant les éléments entre le premier élément ne vérifiant pas la condition et la fin de la liste
       - Il faut reconvertir en liste après
       - Ex :
@@ -733,7 +733,7 @@ category:
         numbers.sort((num1, num2) => num1 - num2); // numbers = [1, 2, 3, 4, 5]
         ```
 
-    - sublist(int start, [int? end]) → List<E> :
+    - sublist(int start, [int? end]) → List\<E> :
       - Récupère une copie de la portion de la liste contenue entre l'index de départ (inclus) et celui de fin (exclus, s'il est précisé, la fin de la liste sinon)
       - Ex :
         ```dart
@@ -743,7 +743,7 @@ category:
         var copy = lst.sublist(0); // copy = [1, 2, 3, 4, 5]
         ```
 
-    - take(int count) → Iterable<E> :
+    - take(int count) → Iterable\<E> :
       - Retourne un itérable contenant les éléments entre 0 et l'indice donné
       - Il faut reconvertir en liste après
       - Ex :
@@ -752,7 +752,7 @@ category:
         var b = sportsList.take(2).toList(); // b = ['cricket', 'tennis']
         ```
 
-    - takeWhile(bool test(E value)) → Iterable<E> :
+    - takeWhile(bool test(E value)) → Iterable\<E> :
       - Retourne un itérable contenant les éléments entre le premier élément et le premier élément ne vérifiant pas la condition
       - Il faut reconvertir en liste après
       - Ex :
@@ -761,7 +761,7 @@ category:
         var result = numbers.takeWhile((x) => x < 3).toList(); // result = [1, 2]
         ```
 
-    - where(bool test(E element)) → Iterable<E> :
+    - where(bool test(E element)) → Iterable\<E> :
       - Retourne les éléments vérifiant la condition donnée, sous forme d'itérable
       - Il faut reconvertir en liste après
       - Ex :
@@ -774,13 +774,13 @@ category:
         var c = sList.where((i) => i.length > 3).toList(); // c = ['three', 'four']
         ```
 
-    - whereType<T>() → Iterable<T> :
+    - whereType\<T>() → Iterable\<T> :
       - Extrait un itérable qui ne contient que les éléments du même type depuis la liste
       - Il faut reconvertir en liste après
       - Ex :
         ```dart
         var mixList = [1, "a", 2, "b", 3, "c", 4, "d"];
-        var num = mixList.whereType<int>().toList(); // [1, 2, 3, 4]
+        var num = mixList.whereType\<int>().toList(); // [1, 2, 3, 4]
         ```
 
 - Ensemble (Set)
@@ -818,16 +818,16 @@ category:
         'first': 'partridge',
         'second': 'turtledoves',
         'fifth': 'golden rings'
-    }; // Dart infère le type Map<String, String>
+    }; // Dart infère le type Map\<String, String>
 
     var nobleGases = {
         2: 'helium',
         10: 'neon',
         18: 'argon',
-    }; // Ici,  Map<int, String>
+    }; // Ici,  Map\<int, String>
 
     // On peut crée un dictionnaire vide
-    var gifts = Map<String, String>();
+    var gifts = Map\<String, String>();
     // Ou
     var gifts = {} // Dart infèrera le type avec le premier ajout de donnée
     // Et y ajouter les valeurs après
@@ -837,7 +837,7 @@ category:
   - Les dictionnaires supportent aussi les ... et ...? et les compréhension de liste
 
   - Fonction de base
-    - entries → Iterable<MapEntry<K, V>> :
+    - entries → Iterable\<MapEntry<K, V>> :
       - Read-Only
       - Retourne les valeurs du dictionnaire
       - Il faut reconvertir en liste après
@@ -866,7 +866,7 @@ category:
         var b = dct.isNotEmpty; // b = True
         ```
 
-    - keys → Iterable<K> :
+    - keys → Iterable\<K> :
       - Read-Only
       - Retourne l'itérable des clés du dictionnaire
       - Il faut reconvertir en liste après
@@ -885,7 +885,7 @@ category:
         var b = dct.length; // b = 3
         ```
 
-    - values → Iterable<V> :
+    - values → Iterable\<V> :
       - Read-Only
       - Retourne l'itérable des valeurs du dictionnaire
       - Il faut reconvertir en liste après
@@ -895,7 +895,7 @@ category:
         var b = dct.values.toList(); // b = [1, 2, 3]
         ```
 
-    - addAll(Map<K, V> other) → void :
+    - addAll(Map\<K, V> other) → void :
       - Ajoute le dictionnaire donné
       - Si une clé est déjà dans le dictionnaire, sa valeur est remplacée par la nouvelle
       - Ex :
@@ -941,7 +941,7 @@ category:
         // 2: Earth
         ```
 
-    - map<K, V>(MapEntry<K, V> convert(K key, V value)) → Map<K, V> :
+    - map\<K, V>(MapEntry<K, V> convert(K key, V value)) → Map\<K, V> :
       - Applique la fonction donnée à tous les éléments et reconstruit un dictionnaire avec les résultats
       - Ex :
         ```dart
