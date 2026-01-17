@@ -5,7 +5,6 @@ category:
   - Guide
 ---
 
-
 # Créer une application avec Flutter
 
 L'objectif de ce document est de présenter Dart et Flutter, de comprendre la logique du language et de pouvoir créer des modules sur MyEcl

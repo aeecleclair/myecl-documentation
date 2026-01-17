@@ -16,7 +16,6 @@ Pour ce faire, il faut ouvrir le fichier `pubspec.yaml` dans le dossier de l'app
 Il y a ensuite deux manière de faire :
 
 - Manuellement :
-
   - Rechercher la dernière version de la librairie dans le [repository](https://pub.dev/packages/flutter_hooks)
 
   - L'ajouter au fichier `pubspec.yaml` en ajoutant la ligne fléchée suivante :
@@ -33,7 +32,6 @@ Il y a ensuite deux manière de faire :
   - Puis de lancer la commande `flutter pub get`
 
 - A l'aide d'une extension VSCode:
-
   - Installer l'extension **Pubspec Assist**
   - Lancer la et rechercher `flutter_hooks`
   - L'extension va automatiquement installer la librairie `flutter_hooks`

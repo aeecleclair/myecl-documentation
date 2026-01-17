@@ -38,55 +38,59 @@ final advertProvider = StateNotifierProvider<AdvertNotifier, Advert>((ref) {
 ```
 
 Détaillons ce code ensemble :
+
 - ```dart
-	import package:flutter_riverpod/flutter_riverpod.dart';
-	```
-	Nous permet d'importer les classes `StateNotifier` et `StateNotifierProvider`
-  
+  import package:flutter_riverpod/flutter_riverpod.dart';
+  ```
+  Nous permet d'importer les classes `StateNotifier` et `StateNotifierProvider`
 - ```dart
-	class AdvertNotifier extends StateNotifier<Advert> {
+  class AdvertNotifier extends StateNotifier<Advert> {
   AdvertNotifier() : super(Advert.empty());
-	```
-  On commence par créer notre notifier, la classe `AdvertNotifier` qui hérite de `StateNotifier`. On précise entre chevrons (`<Advert>`) que le `state` de notre provider contiendra un objet de type `Advert`. 
+  ```
+  On commence par créer notre notifier, la classe `AdvertNotifier` qui hérite de `StateNotifier`. On précise entre chevrons (`<Advert>`) que le `state` de notre provider contiendra un objet de type `Advert`.
   L'objet contenu entre les parenthèses du `super(...)` correspond au `state` par défaut de notre provider, ici un Advert vide (c'est la synthaxe du constructeur en dart).
-  
 - ```dart
       void setAdvert(Advert i) {
         state = i;
     }
-	```
+  ```
   Notre provider possède une unique méthode `setAdvert`, lorsqu'elle est appellée, le `state` du provider est modifié par l'Advert en argument, ce qui va notifier tout les widgets utilisant ce provider pour qu'ils se mettent à jour.
-  
 - ```dart
       final advertProvider = StateNotifierProvider<AdvertNotifier, Advert>((ref) {
   return AdvertNotifier();
-	});
-	```
-	Enfin, on défini notre provider qui hérite de `StateNotifierProvider`.
+  });
+  ```
+  Enfin, on défini notre provider qui hérite de `StateNotifierProvider`.
   On utilise le constructeur `StateNotifierProvider<Notifier,Type>()` pour définir notre provider. On lui spécifie entre crochet le type (la classe) du notifier et le type du `state`, on lui fourni dans les parenthèses une fonction qui retourne l'objet correspondant à notre classe AdvertNotifier.
-  
+
 Maintenant si on veut utiliser notre provider dans un autre fichier il faut importer notre provider :
+
 ```dart
 import 'package:myecl/advert/providers/advert_provider.dart';
 ```
 
 Le `StatelessWidgets` utilisé jusque là doit être remplacé par un `ConsumerWidget` et il faut dire à notre interface de s'actualiser lors d'un changement dans le `state` du provider :
+
 ```dart
 final advert = ref.watch(advertProvider);
 ```
+
 La variable `advert` contient l'état du provider et la clause `ref.watch(advertProvider)` "surveille" les éventuelles changements dans l'état du provider pour provoquer l'actualisation du widget.
 
 Enfin, pour pouvoir appliquer des modifications à l'état du provider, il faut utiliser le notifier :
+
 ```dart
 final advertNotifier = ref.watch(advertProvider.notifier);
 ```
+
 Qu'on utilise de cette manière :
+
 ```dart
 advertNotifier.setAdvert(advert);
 ```
 
-
 Concrêtement, le code notre page ressemblerait à ça :
+
 ```dart
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -111,7 +115,6 @@ class AdvertAddEditAdvertPage extends HookConsumerWidget {
 
 ```
 
-
 ## Les providers comme lien entre UI et API
 
 Dans Titan, il est souvant nécessaire de récuperer des informations depuis l'API d'Hyperion. Les classes et les repositories nous permettent la récupération de ces infos mais aimerait pouvoir les conserver au cours de notre utilisation de l'appli sans avoir besoin de les demander à Hyperion à chaque changement de page.
@@ -124,6 +127,7 @@ Une solution plus propre, serait de mettre à jour ou non la liste du provider d
 C'est pour simplifier ces traitements que nous avons créé des templates de notifier, disponibiles dans les `lib/tools/providers/` : `SingleNotifier`, `ListNotifier`, `MapNotifier`. Il suffit alors d'hériter de ces classes pour faciliter les appels API.
 
 Voici, par exemple, le code du `ListNotifier` :
+
 ```dart
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:myecl/tools/exception.dart';
@@ -274,10 +278,10 @@ abstract class ListNotifier<T> extends StateNotifier<AsyncValue<List<T>>> {
 ```
 
 Pour résumé (et parce qu'il n'est pas nécessaire de comprendre chaque ligne de code pour l'utiliser), le notifier possède des méthodes loadList, add, addAll, update et delete. Ces méthodes sont chargées de :
+
 - faire des appels API
 - gérer les exceptions
 - mettre à jour le `state` en conséquence
-
 
 Et voici le code du provider associé à la liste des Sessions du module cinéma :
 
@@ -335,10 +339,10 @@ final sessionListProvider =
 Dans sa forme globale, il est très similaire avec le provider vu précédement. Cette fois-ci, on initialise le notifier avec un `sessionRepository` permettant la réalisation des appels API (ligne 41-42).
 Avant de retourner le notifier, on cherche à load les sessions dans le state (ligne 45).
 
-
 ## Les implémentations
 
 Les méthodes du `SessionListNotifier ` sont des fonctions basée sur les méthodes existantes du `ListNotifier`. Les fonctions du `ListNotifier` prennent en paramètre :
+
 - La fonctions réalisant l'appels API (ici, une méthode du repository)
 - Quand c'est nécessaire, une fonction réalisant des modifications sur la liste
 - Quand c'est nécessaire, l'objet de la requête (ici, une session)
@@ -354,4 +358,3 @@ On remarque ensuite que le `StateNotifier` (implémenté dans le `ListNotifier`)
 Ce type de variable est très utile (voir indispensable) pour la communication avec une API, car elle permet de gérer tout les cas de figure (l'attente de la réponse, l'erreur ou la donnée renvoyée). La seule fonction à retenir au sujet de ces variables est `.when()`, qui permet de faire la disjonction de cas.
 
 Ainsi, state est une `AsyncValue` qui, si elle possède des données, sont de type `List<Item>` (spécifié par `<Item>` à l'initialisation de `ListNotifier`.
-  

@@ -135,7 +135,7 @@ Cettte classe a été codée pour rendre plus facile et plus lisible les codes d
 
 ## 4. Les providers
 
-A partir des repositories, on crée les providers qui permettront l'interaction entre l'utilisateur et la base de donnée. Il faut au moins autant de providers que de repositories. Cependant, il est très courant d'en avoir bien plus. Par exmple, l'endpoint `loans/history/` (que j'ai mis dans le repository loan_repository.dart, ce qui peut être discutable) demande son provider car il ne manipule pas les mêmes données que le provider _loan_list_provider.dart_.
+A partir des repositories, on crée les providers qui permettront l'interaction entre l'utilisateur et la base de donnée. Il faut au moins autant de providers que de repositories. Cependant, il est très courant d'en avoir bien plus. Par exmple, l'endpoint `loans/history/` (que j'ai mis dans le repository loan*repository.dart, ce qui peut être discutable) demande son provider car il ne manipule pas les mêmes données que le provider \_loan_list_provider.dart*.
 
 La règle est qu'un provider manipule toujours le même type de données. Il en faut donc un pour la liste des prêts, un pour la liste des objets, un pour le détail d'un prêt (endpoints `loans/{loan_id}`), puisque son type est Loan et non `List<Loan>`, et un pour l'historique car la liste des prêts est différentes de celle des prêts en cours.
 
@@ -278,7 +278,6 @@ Exemple d'un formulaire d'ajout d'objet (Je ne détaille que les différents typ
 
 Utiliser un TextEntry (cf widget custom de Titan)
 
-
 ### Le formulaire de date
 
 Utiliser un DateEntry (cf widget custom de Titan)
@@ -330,7 +329,6 @@ Ce formulaire est une colonne de CheckBox, `value` indique si la case doit être
 ## 8. Le Pull-to-refresh
 
 Le pull-to-refresh permet de rafraîchir le contenur d'une page en scrollant vers le bas. Puisque les implémentations différent en fonction des plateformes, j'ai créé une classe faisant la disjonction de cas, dans le ficher _tools/refresher.dart_. Passez en argument la zone que vous voulez rendre rafraîchissable et une fonction asynchrone `onRefresh`. Cette fonction doit être une fonction d'un provider (celle appelée à l'initialisation de celui-ci, car seules ces données ont pu changer en temps).
-
 
 ## 9. Le Dialog
 

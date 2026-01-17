@@ -5,7 +5,6 @@ category:
   - Guide
 ---
 
-
 # Les Widgets
 
 C'est l'élément de base de Flutter, toute l'application n'est qu'une imbrication de Widget les uns dans les autres.

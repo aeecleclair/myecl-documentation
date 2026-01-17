@@ -28,34 +28,34 @@ Il n'existe que deux cas de figure pour que l'application se rende compte que le
 - Le pull-to-refresh : Ici, l'utilisateur souhaite rafraichir la page, l'application redemande donc à l'API les données, et cela peut échouer à cause de l'expiration. Ce cas de figure est totalement géré par le `Refresher`. Cette classe fait partie des nombreuses classe que je vous incite à utiliser dans vos modules, pour gagner du temps et éviter d'avoir des erreurs que j'ai déjà résolues.
 - Un bouton : Ici, votre module fournit un bouton, qui communique indirectement avec l'API, par exemple pour ajouter un prêt. Dans ce cas, c'est à vous d'inclure l'outil de rafraichissement du token dans votre fonction. Il faut encapsuler votre fonction du provider dans la fonction `tokenExpireWrapper` (dans _tools/token_expire_wrapper.dart_), qui rafraîchit le token si besoin est. Pour empêcher l'utilisateur de cliquer plusieurs fois sur le bouton, implémentez un `WaitingButton` (dans _tools/ui/shrink_button.dart_)
 
-    Exemple dans _loan/ui/pages/item_group_page/add_edit_item_page.dart_ :
+  Exemple dans _loan/ui/pages/item_group_page/add_edit_item_page.dart_ :
 
-    ```dart
-    if (key.currentState == null) {
-    	return;
+  ```dart
+  if (key.currentState == null) {
+  	return;
+  }
+    if (key.currentState!.validate()) {
+    	await tokenExpireWrapper(ref, () async {
+      	Item newItem = Item(
+        	id: isEdit ? item.id : '',
+          name: name.text,
+          caution: int.parse(caution.text),
+          suggestedLendingDuration:
+          double.parse(lendingDuration.text),
+          available: item.available);
+        final value = isEdit
+        	? await itemListNotifier.updateItem(
+          	newItem, loaner.id)
+          : await itemListNotifier.addItem(
+          	newItem, loaner.id);
+        ...
+        }
+      });
+    } else {
+    	displayToast(context, TypeMsg.error,
+      	LoanTextConstants.incorrectOrMissingFields);
     }
-      if (key.currentState!.validate()) {
-      	await tokenExpireWrapper(ref, () async {
-        	Item newItem = Item(
-          	id: isEdit ? item.id : '',
-            name: name.text,
-            caution: int.parse(caution.text),
-            suggestedLendingDuration:
-            double.parse(lendingDuration.text),
-            available: item.available);
-          final value = isEdit
-          	? await itemListNotifier.updateItem(
-            	newItem, loaner.id)
-            : await itemListNotifier.addItem(
-            	newItem, loaner.id);
-          ...
-          }
-        });
-      } else {
-      	displayToast(context, TypeMsg.error,
-        	LoanTextConstants.incorrectOrMissingFields);
-      }
-    ```
+  ```
 
 Voici le code du wrapper dans _tools/token_expire_wrapper.dart_ :
 
