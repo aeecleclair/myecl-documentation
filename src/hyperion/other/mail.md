@@ -33,13 +33,52 @@ For that purpose, we will use jinja2 templates to create the HTML content of the
 
 ## Creating a mail template
 
-Mails templates are located in assets/
+::: info Templates are located in CalypSSO
 
-::: info TODO: See with former students.
-Currently, templates are only in CalypSSO
+If you want to create a mail template, you should create it in the CalypSSO repository, since it this repository is already setup for nodejs and it is easier to create static html/css files.
+
 :::
 
-## Sensing an email to users
+Here is a quick template example:
+
+```html
+---
+preheader: Welcome to @{{ _product_name }}! Please create your account.
+---
+
+<x-default>
+  <x-button-card
+    title="Welcome to @{{ _product_name }}!"
+    url="@{{ creation_url }}"
+    button="Create your account"
+  >
+    You have been invited to join @{{ _product_name }}! To complete your
+    registration, please create your account by clicking the button below:
+  </x-button-card>
+
+  <x-spacer height="24px" />
+
+  <x-button-card
+    lang="fr"
+    title="Bienvenue sur @{{ _product_name }} !"
+    url="@{{ creation_url }}"
+    button="Créer votre compte"
+  >
+    Tu as été invité à rejoindre @{{ _product_name }} ! Pour finaliser ton
+    inscription, nous te prions de créer ton compte en cliquant sur le bouton
+    ci-dessous :
+  </x-button-card>
+</x-default>
+```
+
+::: warning Availabilty in Hyperion
+
+Note that a new version of CalypSSO needs to be released in order for the new template to be available in Hyperion, since the templates are loaded as a python package in Hyperion.
+
+:::
+
+
+## Sending an email to users
 
 ::: warning Background tasks
 

@@ -193,10 +193,35 @@ async def send_test_notification_topic(
     )
 ```
 
-::: info Topic
+::: tip Module-managed topics
 
-Here `notification_test_topic` is a topic that is harcoded in the code for testing purposes, but in a real case scenario, you have to create your own topic and manage the subscription of users to it. You can check the code of the `NotificationManager` to see how to do it.
+You can declare in your module a list of topics that are managed by your module, and then use them to send notifications to users. This can be useful for example to send notifications to users that have purchased a product at the AMAP and tell them that the product is now available. Moreover users can subscribe/unsubscribe to these topics via the app.
 
+```py
+root = "amap"
+amap_topic = Topic(
+    id=uuid.UUID("8d7e6e89-5096-4d41-8781-9a2d43fcd01b"),
+    module_root=root,
+    name="🛒 AMAP",
+    topic_identifier=None,
+    restrict_to_group_id=None,
+    restrict_to_members=True,
+)
+module = Module(
+    root=root,
+    tag="AMAP",
+    default_allowed_account_types=[AccountType.student, AccountType.staff],
+    registred_topics=[amap_topic],
+    factory=AmapFactory(),
+    permissions=AmapPermissions,
+)
+```
+
+Please be careful to generate a new UUID for each topic, and to not change the id of the topic once it is created, otherwise you will lose all the subscribers of the topic.
+
+:::
+
+Moreover, you can also create topics that are not managed by your module, and manage them by yourself.
 Here is an example of the available methods for topic management:
 
 - 

@@ -1,26 +1,115 @@
 ---
 title: Schemas
-order: 1
+order: 2
 category:
   - Guide
+  - Module
 ---
 
-Comme l'a dit le grand Linus Torvalds[^1] :
 
-> _Bad programmers worry about the code. Good programmers worry about data structures and their relationships._
+# Schemas
+
+## Introduction
+
+Schemas are the data structures that are used to define the shape of the data that is sent and received by the endpoints of a module. They are defined in the `schemas_{module_name}.py` file.
+
+They are the starting point of the data flow in a module, and they are used to validate the data that is sent to the endpoints, and to define the shape of the data that is returned by the endpoints.
+u
+Thus, the end-user of the API only "sees" the schemas, and can use the API without "surprises" because the schemas define a clear contract between the API and the user.
+Schemas are the lingua franca of Hyperion and the end-user.
+
+## Typing in Python
+
+Python is a dynamically typed language, which means that the type of a variable is determined at runtime. **However**, Python also supports **type hints**. This is especially useful when working with schemas, as it allows us to catch errors early and have better autocompletion in our code editor. 
+
+Pydantic, the library used for schemas in Hyperion, takes advantage of type hints to perform data **validation and parsing**. This means that when we define a schema, we can specify the types of the fields, and Pydantic will ensure that the data conforms to those types.
+
+Thus, if an endpoint is called with wrong data (e.g. a string instead of an integer), Pydantic will raise a validation error, and the endpoint will return a **422 Unprocessable Entity** response to the client, with details about the validation error.
+
 
 Donc faut traiter des schema, expliquer que c la lingua franca d'Hyperion (à partir de l'endpoint et dans toute la trace qui en découle (la vie de l'endpoint), toute la communication se fait avec des schemas (tu reçois un schema de FastAPI ds les endpoints, tu envoies un schema aux CRUDs, donc les CRUDs "comprennent" les schemas et ils gèrent intérieurement la conversion avec les modèles)).
 
-Expliquer des bases de Pydantic et de validation (c littéralement Zod en python hein).
+## Pydantic basics
 
-Et tjs donner des exemples c important. Et expliquer qu'il faut souvent un plusieurs modèles pour 1 "type logique", genre un TrucBase, un TrucEdit et un TrucComplete, et expliquer que l'héritage c important.
+Here is how to define a simple schema with Pydantic:
 
-Un petit point sur le principe de Liskov[^2] peut éclaircir des doutes sur la validité d'un supertype.
+```py
+from pydantic import BaseModel
 
-Expliquer pk le typage fort et statique c cool pour catch pleins d'erreurs, avoir de l'intellisense propre, et valider les données une seule fois à l'entrée[^3].
+class UserSchema(BaseModel):
+    id: int
+    name: str
+    email: str
+```
+In this example, we define a `UserSchema` with three fields: `id`, `name`, and `email`. Each field has a type hint that specifies the type of data that is expected for that field.
 
-[^1]: [Mail original (sur LWN)](https://lwn.net/Articles/193245)
+When we create an instance of `UserSchema`, Pydantic will validate the data and ensure that it conforms to the specified types. For example:
 
-[^2]: [Principe de substitution de Liskov](https://fr.wikipedia.org/wiki/Principe_de_substitution_de_Liskov)
+```py
+user = UserSchema(id=1, name="John Doe", email="john.doe@example.com")
+```
 
-[^3]: [_Parse, don't validate_](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/), cité dans [l'intro de Zod v3](https://v3.zod.dev/?id=introduction)
+In this case, it should work. However, if we try to create an instance with invalid data, we will get a validation error:
+
+```py
+user = UserSchema(id="not_an_integer", name=123, email="not_an_email")
+```
+
+## Hyperion schemas
+
+In general we always use multiple schemas for a given resource.
+
+Let's start with an example, I will take the Event (from Ticketing module) ressource as an example, but the same principles apply to all the resources in Hyperion.
+
+> Ressource = a concept that represents a real-world entity, such as a user, an event, a product, etc. Then you can create, read, update and delete instances of this resource.
+
+```py 12
+class EventBase(BaseModel):
+    store_id: UUID
+    name: str
+    open_date: datetime
+    close_date: datetime | None = None
+    quota: int | None = None
+    user_quota: int | None = None
+
+
+class EventSimple(EventBase):
+    creator_id: str
+    id: UUID
+    used_quota: int
+    disabled: bool
+
+
+class EventComplete(EventSimple):
+    store: StoreSimple
+    sessions: list["SessionSimple"]
+    categories: list["CategorySimple"]
+
+
+class EventUpdate(BaseModel):
+    name: str | None = None
+    open_date: datetime | None = None
+    close_date: datetime | None = None
+    quota: int | None = None
+    user_quota: int | None = None
+    disabled: bool | None = None
+```
+
+Now, you might be wondering: __why do we have four different models instead of just one?__
+
+The reason is that we will do different operations on the Event resource, and each operation will require a different set of data.
+
+For example when an event will be created, the `id` field will not be provided by the client, but will be generated by the server, so we don't want to include it in the schema that is used for the creation of an event. On the other hand, when we want to read an event, we want to have all the information about the event, including the `id`, so we need a different schema for that.
+
+In most cast you will have a `SchemaBase` which defines the common fields that will be provided when creating a ressource, a `SchemaSimple` which defines the fields that will be returned when reading a resource, a `SchemaComplete` which defines the fields that will be returned when reading a resource with all its **relationships**, and a `SchemaUpdate` which defines the fields that can be updated when updating a resource. Note that in the `SchemaUpdate`, all the fields are optional, because when updating a resource, you might only want to update a subset of the fields.
+
+::: info SchemaComplete vs SchemaSimple
+
+An example of when to use `SchemaSimple` instead of `SchemaComplete` is when you have an endpoint that returns a list of resources, in this case you will want to use the `SchemaSimple` to avoid returning too much data, and then you will have another endpoint that returns a single resource with all its relationships, in this case you will want to use the `SchemaComplete`.
+
+:::
+
+
+## Conclusion
+
+Schemas are a fundamental part of Hyperion, they define the shape of the data that is sent and received by the endpoints. They are the lingua franca of Hyperion, and they allow us to have a clear contract between the API and the end-user, it turns out to be really useful when the functions to call the API are generated automatically from the schemas like in **Enceladus**.

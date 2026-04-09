@@ -1,5 +1,5 @@
 ---
-title: Plus loin...
+title: Other
 dir:
   order: 4
 category:
