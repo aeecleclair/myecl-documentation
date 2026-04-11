@@ -124,7 +124,8 @@ async def create_event(
     db.add(
         models_ticketing.TicketingEvent(**event.model_dump()),
     )
-    await db.flush()
+    # await db.flush()
+    # db.flush() should be used only if it's necessary. Further explanations below.
 ```
 
 In this example, we create a new event by adding an instance of `models_ticketing.TicketingEvent` to the database session. We use the `model_dump()` method of the schema to convert it to a dictionary that can be unpacked into the model constructor. Usually, the `YourSchemaSimple` is the used one since it contains all the fields except relations, which are not needed for the creation of an event.
@@ -185,7 +186,8 @@ async def update_event(
         .where(models_ticketing.TicketingEvent.id == event_id)
         .values(**event_update.model_dump(exclude_unset=True)),
     )
-    await db.flush()
+    # await db.flush()
+    # db.flush() should be used only if it's necessary. Further explanations below.
 ```
 
 ::: warning Partial update
@@ -210,7 +212,8 @@ async def delete_event(
             models_ticketing.TicketingEvent.id == event_id,
         ),
     )
-    await db.flush()
+    # await db.flush()
+    # db.flush() should be used only if it's necessary. Further explanations below.
 ```
 
 ::: info Integrity errors
