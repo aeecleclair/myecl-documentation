@@ -21,7 +21,7 @@ When working with files, it's important to be careful with path transversal vuln
 
 ## Getting a data file
 
-There are some utility functions such as `get_file_from_data` that can be used to get a file from the `data/` directory and one very useful is that this function can take a default asset as a fallback if the file is not found in the `data/` directory.
+There are some utility functions such as `get_file_from_data` that can be used to get a file from the `data/` directory and one very useful is that this function can take a default asset as a fallback if the file is not found in the `data/` directory. These utilities ask for the filename that should be a UUID.
 
 Example:
 
@@ -38,9 +38,9 @@ async def read_own_profile_picture(
     Get the profile picture of the authenticated user.
     """
 
-    return get_file_from_data(
+    return await get_file_from_data(
         directory="profile-pictures",
-        filename=str(user.id),
+        filename=user.id,
         default_asset="assets/images/default_profile_picture.png",
     )
 ```
@@ -48,9 +48,9 @@ async def read_own_profile_picture(
 ::: details get_file_from_data function
 
 ```py
-def get_file_from_data(
+async def get_file_from_data(
     directory: str,
-    filename: str,
+    filename: str | UUID,
     default_asset: str | None = None,
 ) -> FileResponse:
     """
@@ -62,7 +62,7 @@ def get_file_from_data(
 
     WARNING: **NEVER** trust user input when calling this function. Always check that parameters are valid.
     """
-    path = get_file_path_from_data(directory, filename, default_asset)
+    path = await get_file_path_from_data(directory, filename, default_asset)
 
     return FileResponse(path)
 ```
@@ -75,5 +75,3 @@ def get_file_from_data(
 `save_file_as_data`
 `save_bytes_as_data`
 ...
-
-
