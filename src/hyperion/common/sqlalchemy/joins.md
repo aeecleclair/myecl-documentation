@@ -1,14 +1,14 @@
 ---
-title: Jointures
-description: Guide complet pour maîtriser les jointures SQLAlchemy dans Hyperion
+title: Joins
+description: A comprehensive guide to mastering SQLAlchemy joins in Hyperion
 order: 1
 category:
   - Guide
   - SQLAlchemy
 tag:
-  - jointures
+  - joins
   - performance
-  - base de données
+  - database
 ---
 
 ::: info TODO
@@ -33,51 +33,50 @@ Read at your own risk, it's not accurate and not up to date with the current sta
 
 :::
 
-
-# Guide des Jointures SQLAlchemy
+# Guide to SQLAlchemy joins
 
 ::: danger Disclaimer
 
-Les noms, propriétés des modèles ne sont pas ceux d'Hyperion mais sont ici présents pour faciliter la compréhension. C'est donc à vous d'adapter votre code en fonction de vos propres modèles.
+The names and properties of the models are not those of Hyperion but are included here to aid understanding. It is therefore up to you to adapt your code to match your own models.
 
 :::
 
 ## Introduction
 
-Les jointures sont un concept fondamental lors du développement de modules pour Hyperion. Elles permettent de récupérer des données liées depuis plusieurs tables en optimisant les performances et en réduisant le nombre de requêtes SQL.
+Joins are a fundamental concept in the development of modules for Hyperion. They allow you to retrieve related data from multiple tables while optimizing performance and reducing the number of SQL queries.
 
-Ce guide vous accompagnera dans la maîtrise des jointures SQLAlchemy, depuis les concepts de base jusqu'aux techniques avancées d'optimisation.
+This guide will help you master SQLAlchemy joins, from basic concepts to advanced optimization techniques.
 
-::: tip Objectifs du guide
+::: tip Objectives of this guide
 
-- Comprendre les différents types de jointures
-- Apprendre à optimiser les performances
-- Maîtriser la syntaxe SQLAlchemy
-- Éviter les pièges courants
-
-:::
-
-## Comprendre les jointures : explicites vs implicites
-
-::: warning Attention aux performances
-
-Les jointures peuvent rapidement devenir complexes et impacter les performances. Il est crucial de comprendre quand et comment les utiliser efficacement.
+- Understand the different types of joins
+- Learn how to optimize performance
+- Master SQLAlchemy syntax
+- Avoid common pitfalls
 
 :::
 
-SQLAlchemy offre deux approches pour gérer les relations entre entités :
+## Understanding joins: explicit vs. implicit
 
-### 🔍 Jointures explicites
+::: warning Watch Out for Performance Issues
 
-### 🔄 Jointures implicites (Lazy Loading)
+Joins can quickly become complex and impact performance. It is crucial to understand when and how to use them effectively.
 
-### 🔍 Jointures explicites
+:::
 
-Les jointures explicites effectuent une seule requête SQL optimisée. C'est l'équivalent direct des jointures SQL classiques.
+SQLAlchemy offers two approaches for managing relationships between entities
+
+### 🔍 Explicit joins
+
+### 🔄 Implicit joins (lazy loading)
+
+### 🔍 Explicit joins
+
+Explicit joins execute a single optimized SQL query. This is the direct equivalent of traditional SQL joins.
 
 ::: tabs
 
-@tab SQL Natif
+@tab Native SQL
 
 ```sql [SQL Natif]
 SELECT users.*, todos.*
@@ -89,7 +88,7 @@ WHERE users.username = 'john_doe';
 @tab SQLAlchemy
 
 ```python [SQLAlchemy]
-# Jointure explicite avec SQLAlchemy moderne
+# Explicit Joins with Modern SQLAlchemy
 async def get_user_with_todos(
     db: AsyncSession,
     username: str,
@@ -104,15 +103,15 @@ async def get_user_with_todos(
 
 :::
 
-**Avantages :**
+**Advantages:**
 
-- ✅ Une seule requête SQL
-- ✅ Performances optimales
-- ✅ Contrôle total sur la requête
+- ✅ A single SQL query
+- ✅ Optimal performance
+- ✅ Full control over the query
 
-### 🔄 Jointures implicites (Lazy Loading)
+### 🔄 Implicit joins (lazy loading)
 
-SQLAlchemy peut charger les données liées à la demande, générant plusieurs requêtes SQL automatiquement.
+SQLAlchemy can load related data on demand, automatically generating multiple SQL queries.
 
 ::: tabs
 
@@ -124,7 +123,7 @@ FROM users
 WHERE users.username = 'john_doe';
 ```
 
-@tab SQL [Requêtes suivantes (à la demande)]
+@tab SQL [Next queries (on demand)]
 
 ```sql [Requêtes suivantes (à la demande)]
 SELECT todos.*
@@ -135,14 +134,14 @@ WHERE todos.user_id = ?;
 @tab SQLAlchemy
 
 ```python [SQLAlchemy]
-# Chargement lazy (par défaut)
+# lazy loading (by default)
 async def get_user(db: AsyncSession, username: str) -> CoreUser | None:
     result = await db.execute(
         select(CoreUser).where(CoreUser.username == username)
     )
     user = result.scalars().first()
 
-    # Cette ligne déclenche une nouvelle requête SQL
+    # This line triggers a new SQL query
     if user:
         todos = user.todos  # N+1 queries problem!
     return user
@@ -150,53 +149,52 @@ async def get_user(db: AsyncSession, username: str) -> CoreUser | None:
 
 :::
 
-**Avantages :**
+**Pros:**
 
-- ✅ Simplicité d'utilisation
-- ✅ Charge uniquement les données nécessaires
+- ✅ Easy to use
+- ✅ Loads only the necessary data
 
-**Inconvénients :**
+**Cons:**
 
-- ❌ Problème N+1 queries
-- ❌ Performances imprévisibles
+- ❌ N+1 query issue
+- ❌ Unpredictable performance
 
-## 🎯 Matrice de décision
+## 🎯 Decision Matrix
 
-Le choix entre jointures explicites et implicites dépend de deux critères principaux :
+The choice between explicit and implicit joins depends on two main criteria:
 
-::: tip Critères de décision
+::: tip Decision Criteria
 
-1. **Type de relation** : One-to-one, One-to-many, Many-to-many
-2. **Probabilité d'accès** : Accès certain vs probable aux données liées
-
-:::
-
-| Type de relation | Accès certain    | Accès probable   | Recommandation         |
-| ---------------- | ---------------- | ---------------- | ---------------------- |
-| **One-to-one**   | `joinedload()`   | `selectinload()` | Toujours charger       |
-| **One-to-many**  | `selectinload()` | `lazy='select'`  | Évaluer le cas         |
-| **Many-to-many** | `selectinload()` | `lazy='dynamic'` | Pagination recommandée |
-
-::: details Explication des stratégies de chargement
-
-- **`joinedload()`** : Jointure SQL (LEFT JOIN)
-- **`selectinload()`** : Requête séparée avec IN
-- **`lazy='select'`** : Chargement à la demande (par défaut)
-- **`lazy='dynamic'`** : Retourne une Query au lieu d'une liste
+1. **Relationship type**: One-to-one, One-to-many, Many-to-many
+2. **Probability of access**: Certain vs. probable access to related data
 
 :::
 
-## 🔗 Relations One-to-One
+| Relationship type | Certain access   | Probable access  | Recommendation     |
+| ----------------- | ---------------- | ---------------- | ------------------ |
+| **One-to-one**    | `joinedload()`   | `selectinload()` | Always load        |
+| **One-to-many**   | `selectinload()` | `lazy='select'`  | Evaluate the case  |
+| **Many-to-many**  | `selectinload()` | `lazy='dynamic'` | Paging recommended |
 
-Les relations one-to-one sont idéales pour étendre un modèle principal avec des données optionnelles.
+::: details Explanation of loading strategies
 
-::: info Exemple concret
-
-Un `User` peut avoir un seul `Profile` détaillé avec photo, bio, etc.
+- **`joinedload()`**: SQL join (LEFT JOIN)
+- **`selectinload()`**: Separate` query wi`th IN
+- **`lazy=‘select’`**: On-demand loading (de`fa`ult)
+- **`lazy=‘dynamic’`**: Returns a query instead of a list
 
 :::
 
-### Définition des modèles
+## 🔗 One-to-One Relationships
+
+One-to-one relationships are ideal for extending a main model with optional data.
+
+::: info Concrete example
+
+A `User` can have a single detailed `Profile` with a photo, bio, etc.
+:::
+
+### Model definitions
 
 ```python [models.py]
 from sqlalchemy import ForeignKey, Text
@@ -209,7 +207,7 @@ class CoreUser(Base):
     username: Mapped[str] = mapped_column(index=True, unique=True)
     email: Mapped[str] = mapped_column(index=True, unique=True)
 
-    # Relation one-to-one
+    # One-to-one relationship
     profile: Mapped["CoreUserProfile"] = relationship(
         "CoreUserProfile",
         uselist=False,
@@ -234,18 +232,18 @@ class CoreUserProfile(Base):
     )
 ```
 
-### Stratégies de chargement
+### Loading strategies
 
 ::: tabs
 
-@tab Chargement eager (recommandé)
+@tab Eager loading (recommended)
 
 ```python [Chargement eager (recommandé)]
 async def get_user_with_profile(
     db: AsyncSession,
     username: str,
 ) -> CoreUser | None:
-    """Récupère un utilisateur avec son profil en une seule requête"""
+    """Retrieves a user and their profile in a single query"""
     result = await db.execute(
         select(CoreUser)
         .where(CoreUser.username == username)
@@ -253,52 +251,52 @@ async def get_user_with_profile(
     )
     user = result.scalars().first()
 
-    # Accès au profil sans requête supplémentaire
+    # Access to the profile without an additional request
     if user and user.profile:
         bio = user.profile.bio
 
     return user
 ```
 
-@tab Chargement lazy (par défaut)
+@tab Lazy loading (by default)
 
 ```python [Chargement lazy (par défaut)]
 async def get_user_lazy(
     db: AsyncSession,
     username: str,
 ) -> CoreUser | None:
-    """Chargement lazy du profil (déclenche une requête supplémentaire)"""
+    """Lazy loading of the profile (triggers an additional request)"""
     result = await db.execute(
         select(CoreUser).where(CoreUser.username == username)
     )
     user = result.scalars().first()
 
-    # Cette ligne déclenche une deuxième requête SQL
+    # This line triggers a second SQL query
     if user:
-        profile = user.profile  # Peut être None
+        profile = user.profile  # Can be None
 
     return user
 ```
 
 :::
 
-::: tip Bonne pratique
+::: tip Good practice
 
-Pour les relations one-to-one, utilisez toujours `joinedload()` car le coût de la jointure est minimal et évite le problème N+1.
-
-:::
-
-## 📚 Relations One-to-Many
-
-Les relations one-to-many sont les plus courantes. Un parent peut avoir plusieurs enfants.
-
-::: info Exemple concret
-
-Un `CoreUser` peut avoir plusieurs `CoreAssociation` (adhésions à des associations).
+For one-to-one relationships, always use `joinedload()` because the cost of the join is minimal and it avoids the N+1 problem.
 
 :::
 
-### Définition des modèles
+## 📚 One-to-Many relationships
+
+One-to-many relationships are the most common. A parent can have multiple children.
+
+::: info Concrete example
+
+A `CoreUser` can have multiple `CoreAssociation`s (memberships (_adhésion_) in associations).
+
+:::
+
+### Model definitions
 
 ```python [models.py]
 from sqlalchemy import Boolean, ForeignKey
@@ -310,7 +308,7 @@ class CoreUser(Base):
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(index=True, unique=True)
 
-    # Relation one-to-many
+    # One-to-many relationship
     associations: Mapped[list["CoreAssociation"]] = relationship(
         "CoreAssociation",
         back_populates="user",
@@ -331,29 +329,29 @@ class CoreAssociation(Base):
     )
 ```
 
-### Stratégies selon le cas d'usage
+### Strategies by usecase
 
 ::: tabs
 
-@tab Petit nombre d'enfants (selectinload)
+@tab Small number of children (selectinload)
 
 ```python [Petit nombre d'enfants - selectinload]
 async def get_users_with_associations(
     db: AsyncSession,
 ) -> list[CoreUser]:
-    """Recommandé pour < 100 associations par utilisateur"""
+    """Recommended for < 100 associations per user"""
     result = await db.execute(
         select(CoreUser).options(selectinload(CoreUser.associations))
     )
 
-    # Génère 2 requêtes optimisées :
+    # Generates 2 optimized queries :
     # 1. SELECT core_user.*
     # 2. SELECT core_association.* WHERE user_id IN (?, ?, ?, ...)
 
     return result.scalars().all()
 ```
 
-@tab Grand nombre d'enfants (lazy + pagination)
+@tab Large number of children (lazy + paging)
 
 ```python [Grand nombre d'enfants - lazy + pagination]
 async def get_user_associations_paginated(
@@ -362,7 +360,7 @@ async def get_user_associations_paginated(
     page: int = 0,
     page_size: int = 20,
 ) -> list[CoreAssociation]:
-    """Pour de nombreuses associations, chargez à la demande avec pagination"""
+    """For numerous associations, load on demand with paging"""
     result = await db.execute(
         select(CoreAssociation)
         .where(CoreAssociation.user_id == user_id)
@@ -372,13 +370,13 @@ async def get_user_associations_paginated(
     return result.scalars().all()
 ```
 
-@tab Jointure avec filtres
+@tab Join with filters
 
 ```python [Jointure avec filtres]
 async def get_users_with_active_associations(
     db: AsyncSession,
 ) -> list[CoreUser]:
-    """Quand vous filtrez sur les enfants"""
+    """When you filter by children"""
     result = await db.execute(
         select(CoreUser)
         .options(selectinload(CoreUser.associations))
@@ -390,18 +388,18 @@ async def get_users_with_active_associations(
 
 :::
 
-::: warning Attention au N+1
+::: warning Watch out for N+1
 
 ```python
-# ❌ Problème N+1 - évitez ceci !
+# ❌ N+1 problem - avoid this!
 async def bad_example(db: AsyncSession) -> None:
     result = await db.execute(select(CoreUser))
-    users = result.scalars().all()  # 1 requête
+    users = result.scalars().all()  # 1 request
 
     for user in users:
-        print(len(user.associations))  # N requêtes supplémentaires !
+        print(len(user.associations))  # N additional requests!
 
-# ✅ Solution avec selectinload
+# ✅ Solution using selectinload
 async def good_example(db: AsyncSession) -> None:
     result = await db.execute(
         select(CoreUser).options(selectinload(CoreUser.associations))
@@ -409,28 +407,28 @@ async def good_example(db: AsyncSession) -> None:
     users = result.scalars().all()
 
     for user in users:
-        print(len(user.associations))  # Pas de requête supplémentaire
+        print(len(user.associations))  # No additional requests
 ```
 
 :::
 
-## 🔀 Relations Many-to-Many
+## 🔀 Many-to-Many relationships
 
-Les relations many-to-many nécessitent une table d'association et demandent une attention particulière.
+Many-to-many relationships require an association table and call for special attention.
 
-::: info Exemple concret
+::: info Practical example
 
-Un `CoreUser` peut appartenir à plusieurs `CoreGroup`, et un `CoreGroup` peut contenir plusieurs `CoreUser`.
+A `CoreUser` can belong to multiple `CoreGroup`s, and a `CoreGroup` can contain multiple `CoreUser`s.
 
 :::
 
-### Définition des modèles
+### Model definitions
 
 ```python [models.py]
 from sqlalchemy import Table, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-# Table d'association
+# Mapping table
 core_membership = Table(
     "core_membership",
     Base.metadata,
@@ -444,7 +442,7 @@ class CoreUser(Base):
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     username: Mapped[str] = mapped_column(index=True, unique=True)
 
-    # Relation many-to-many
+    # Many-to-many relationship
     groups: Mapped[list["CoreGroup"]] = relationship(
         "CoreGroup",
         secondary="core_membership",
@@ -467,31 +465,31 @@ class CoreGroup(Base):
     )
 ```
 
-### Stratégies de chargement optimisées
+### Optimized loading strategies
 
 ::: tabs
 
-@tab Chargement standard (selectinload)
+@tab Standard load (selectinload)
 
 ```python [Chargement standard - selectinload]
 async def get_users_with_groups(
     db: AsyncSession,
 ) -> list[CoreUser]:
-    """Pour un nombre modéré de relations"""
+    """For a moderate number of relationships"""
     result = await db.execute(
         select(CoreUser).options(selectinload(CoreUser.groups))
     )
     return result.scalars().all()
 ```
 
-@tab Chargement avec filtres
+@tab Loading with filters
 
 ```python [Chargement avec filtres]
 async def get_active_groups_for_user(
     db: AsyncSession,
     user_id: str,
 ) -> list[CoreGroup]:
-    """Filtrer les groupes directement dans la requête"""
+    """Filter groups directly in the query"""
     result = await db.execute(
         select(CoreGroup)
         .join(core_membership)
@@ -502,12 +500,12 @@ async def get_active_groups_for_user(
     return result.scalars().all()
 ```
 
-@tab Association Object Pattern - métadonnées
+@tab Association Object Pattern - metadata
 
 ```python [Association Object Pattern - métadonnées]
 from datetime import datetime
 
-# Pour stocker des métadonnées sur la relation
+# To store metadata about the relationship
 class CoreMembership(Base):
     __tablename__ = "core_membership"
 
@@ -542,7 +540,7 @@ class CoreUser(Base):
     def groups(self) -> list[CoreGroup]:
         return [membership.group for membership in self.group_memberships]
 
-# Usage
+# Use
 async def get_user_with_membership_details(
     db: AsyncSession,
     user_id: str,
@@ -560,27 +558,27 @@ async def get_user_with_membership_details(
 
 :::
 
-::: tip Optimisation many-to-many
+::: tip Many-to-many optimization
 
-- Utilisez `lazy='dynamic'` pour de grandes collections
-- Considérez l'Association Object Pattern pour les métadonnées
-- Toujours paginer les résultats en production
+- Use `lazy='dynamic'` for large collections
+- Consider the Association Object Pattern for metadata
+- Always use paging for results in production
 
 :::
 
-## 🚀 Techniques avancées et bonnes pratiques
+## 🚀 Advanced techniques and good practices
 
-### Combinaison de stratégies
+### Combining strategies
 
 ::: tabs
 
-@tab Chargement multi-niveaux
+@tab Multi-level loading
 
 ```python [Chargement multi-niveaux]
 async def get_users_with_full_context(
     db: AsyncSession,
 ) -> list[CoreUser]:
-    """Chargement optimisé sur plusieurs niveaux"""
+    """Multi-level optimized loading"""
     result = await db.execute(
         select(CoreUser).options(
             selectinload(CoreUser.associations).selectinload(CoreAssociation.events),
@@ -590,7 +588,7 @@ async def get_users_with_full_context(
     return result.scalars().all()
 ```
 
-@tab Chargement conditionnel
+@tab Conditional loading
 
 ```python [Chargement conditionnel]
 from sqlalchemy.orm import load_only
@@ -598,7 +596,7 @@ from sqlalchemy.orm import load_only
 async def get_users_summary(
     db: AsyncSession,
 ) -> list[CoreUser]:
-    """Charger seulement certains champs"""
+    """Load only certain fields"""
     result = await db.execute(
         select(CoreUser).options(
             load_only(CoreUser.username, CoreUser.email),
@@ -610,24 +608,24 @@ async def get_users_summary(
 
 :::
 
-### Debugging et monitoring
+### Debugging and monitoring
 
-::: details Debugging et profiling
+::: details Debugging and profiling
 
-Logger SQL
+SQL logger
 
 ```python [Logger SQL]
 import logging
 
-# Activer les logs SQL pour débugger (à configurer dans settings)
+# Enable SQL logs for debugging (configure in Settings)
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-# En développement, vous pouvez aussi utiliser :
-# SQLALCHEMY_ECHO=True dans votre configuration
+# In development, you can also use:
+# SQLALCHEMY_ECHO=True in your configuration
 ```
 
-Middleware de monitoring
+Monitoring middleware
 
 ```python [Middleware de monitoring]
 from fastapi import Request
@@ -651,16 +649,16 @@ class SQLMonitoringMiddleware:
             self.total_time += total
             print(f"Query #{self.query_count}: {total:.3f}s")
 
-# Usage
+# Use
 monitoring = SQLMonitoringMiddleware()
 monitoring.setup_monitoring(engine)
 ```
 
 :::
 
-### Patterns d'optimisation
+### Optimization patterns
 
-::: details Repository Pattern avec chargement optimisé
+::: details Repository Pattern with optimized loading
 
 ```python
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -672,14 +670,14 @@ class CoreUserRepository:
         self.db = db
 
     async def get_by_id(self, user_id: str) -> CoreUser | None:
-        """Récupération basique d'un utilisateur"""
+        """Basic recovery of a user"""
         result = await self.db.execute(
             select(CoreUser).where(CoreUser.id == user_id)
         )
         return result.scalars().first()
 
     async def get_with_groups(self, user_id: str) -> CoreUser | None:
-        """Utilisateur avec ses groupes"""
+        """User and their groups"""
         result = await self.db.execute(
             select(CoreUser)
             .where(CoreUser.id == user_id)
@@ -688,7 +686,7 @@ class CoreUserRepository:
         return result.scalars().first()
 
     async def get_with_full_profile(self, user_id: str) -> CoreUser | None:
-        """Utilisateur avec profil complet (one-to-one)"""
+        """User with a complete profile (one-to-one)"""
         result = await self.db.execute(
             select(CoreUser)
             .where(CoreUser.id == user_id)
@@ -701,7 +699,7 @@ class CoreUserRepository:
         limit: int = 50,
         offset: int = 0
     ) -> list[CoreUser]:
-        """Liste optimisée pour l'affichage"""
+        """List optimized for display"""
         result = await self.db.execute(
             select(CoreUser)
             .options(
@@ -717,7 +715,7 @@ class CoreUserRepository:
         self,
         search_term: str
     ) -> list[CoreUser]:
-        """Recherche avec associations pré-chargées"""
+        """Search with preloaded associations"""
         result = await self.db.execute(
             select(CoreUser)
             .where(CoreUser.username.ilike(f"%{search_term}%"))
@@ -731,10 +729,10 @@ class CoreUserRepository:
 
 :::
 
-::: danger Anti-patterns à éviter
+::: danger Anti-patterns to avoid
 
 ```python
-# ❌ Chargement en boucle
+# ❌ Loop loading
 async def bad_pattern(db: AsyncSession, user_ids: list[str]) -> None:
     for user_id in user_ids:
         result = await db.execute(
@@ -743,7 +741,7 @@ async def bad_pattern(db: AsyncSession, user_ids: list[str]) -> None:
         user = result.scalars().first()
         await process_user(user)
 
-# ✅ Chargement en lot
+# ✅ Batch load
 async def good_pattern(db: AsyncSession, user_ids: list[str]) -> None:
     result = await db.execute(
         select(CoreUser).where(CoreUser.id.in_(user_ids))
@@ -752,7 +750,7 @@ async def good_pattern(db: AsyncSession, user_ids: list[str]) -> None:
     for user in users:
         await process_user(user)
 
-# ❌ Accès aux relations sans préchargement
+# ❌ Access to relationships without preloading
 async def bad_lazy_access(db: AsyncSession) -> None:
     result = await db.execute(select(CoreUser))
     users = result.scalars().all()
@@ -760,7 +758,7 @@ async def bad_lazy_access(db: AsyncSession) -> None:
     for user in users:
         print(f"User {user.username} has {len(user.groups)} groups")  # N+1 !
 
-# ✅ Préchargement approprié
+# ✅ Appropriate preloading
 async def good_eager_loading(db: AsyncSession) -> None:
     result = await db.execute(
         select(CoreUser).options(selectinload(CoreUser.groups))
@@ -773,26 +771,26 @@ async def good_eager_loading(db: AsyncSession) -> None:
 
 :::
 
-## 📋 Checklist des bonnes pratiques
+## 📋 Checklist of good practices
 
-::: tip Checklist performance
+::: tip Performance checklist
 
-- [ ] **Identifiez vos patterns d'accès** avant de choisir la stratégie
-- [ ] **Utilisez `selectinload()`** pour les relations one-to-many modérées
-- [ ] **Utilisez `joinedload()`** pour les relations one-to-one
-- [ ] **Paginez** les relations many-to-many volumineuses
-- [ ] **Activez les logs SQL** en développement pour débugger
-- [ ] **Mesurez les performances** avec des outils de profiling
-- [ ] **Évitez les boucles** avec chargement lazy
-- [ ] **Utilisez `load_only()`** pour limiter les colonnes chargées
+- [ ] **Identify your access patterns** before choosing a strategy
+- [ ] **Use `selectinload()`** for moderate one-to-many relationships
+- [ ] **Use `joinedload()`** for one-to-one relationships
+- [ ] **Use paging** for large many-to-many relationships
+- [ ] **Enable SQL logging** during development for debugging
+- [ ] **Measure performance** with profiling tools
+- [ ] **Avoid loops** with lazy loading
+- [ ] **Use `load_only()`** to limit the number of columns loaded
 
 :::
 
-::: warning Points d'attention
+::: warning Points to consider
 
-- Les jointures peuvent exploser la taille des résultats
-- Le lazy loading peut créer des problèmes N+1
-- Les relations many-to-many nécessitent une pagination
-- Testez toujours avec des données réalistes
+- Joins can cause the result set size to balloon
+- Lazy loading can create N+1 problems
+- Many-to-many relationships require paging
+- Always test with realistic data
 
 :::

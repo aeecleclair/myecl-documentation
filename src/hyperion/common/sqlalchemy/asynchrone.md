@@ -1,14 +1,14 @@
 ---
-title: L'Asynchrone
-description: Explication synthétique de l'intérêt de l'asynchrone en SQLAlchemy
+title: Asynchronous Processing
+description: A Brief Explanation of the Benefits of Asynchronous Processing in SQLAlchemy
 order: 3
 category:
   - Guide
   - SQLAlchemy
 tag:
-  - asynchrone
+  - asynchronous
   - performance
-  - base de données
+  - database
 ---
 
 ::: info TODO
@@ -33,122 +33,120 @@ Read at your own risk, it's not accurate and not up to date with the current sta
 
 :::
 
+# Why use asynchronous processing in SQLAlchemy?
 
-# Pourquoi l'Asynchrone en SQLAlchemy ?
-
-## 🤔 Le problème du synchrone
+## 🤔 The problem with the synchronous processing
 
 Dans une application web classique avec SQLAlchemy synchrone, chaque requête HTTP bloque complètement le thread pendant l'attente de la base de données :
 
 ::: tabs
 
-@tab Synchrone - Bloquant
+@tab Synchrone - Blocking
 
 ```python [Synchrone - Bloquant]
 def get_user(user_id: str):
-    user = session.query(User).filter(User.id == user_id).first()  # 🔴 Thread bloqué
+    user = session.query(User).filter(User.id == user_id).first()  # 🔴 Blocked thread
     return user
 
-# Si la DB met 100ms à répondre :
-# - 1 requête = 1 thread occupé pendant 100ms
-# - 10 requêtes simultanées = 10 threads occupés
-# - Limite : ~50-200 connexions concurrentes max
+# If the db takes 100ms to respond :
+# - 1 request = 1 thread occupied for 100ms
+# - 10 concurrent requests = 10 active threads
+# - Limit: ~50-200 concurrent connections max
 ```
 
-@tab Asynchrone - Non-bloquant
+@tab Asynchrone - Non-blocking
 
 ```python [Asynchrone - Non-bloquant]
 async def get_user(user_id: str):
-    result = await db.execute(select(User).where(User.id == user_id))  # 🟢 Thread libéré pendant l'attente
-    return result.scalars().first()
+    result = await db.execute(select(User).where(User.id == user_id))  # 🟢 Thread urn result.scalars().first()
 
-# Si la DB met 100ms à répondre :
-# - 1 requête = 1 thread libéré pendant 100ms
-# - 1000 requêtes simultanées = 1 seul thread nécessaire
-# - Limite : ~10 000+ connexions concurrentes
+# If the database takes 100 ms to respond:
+# - 1 request = 1 thread freed up for 100 ms
+# - 1,000 simultaneous requests = only 1 thread required
+# - Limit: ~10,000+ concurrent connections
 ```
 
 :::
 
-## ⚡ Les gains concrets
+## ⚡ Tangible Benefits
 
 ### 📊 Performance
 
-::: tip Amélioration typique
+::: tip Typical Improvement
 
-- **x10 à x50** plus de requêtes simultanées
-- **-80% d'utilisation CPU** pour les I/O
-- **-90% d'utilisation RAM** (moins de threads)
-- **Latence réduite** sous forte charge
+- **10x to 50x** more concurrent requests
+- **80% lower CPU usage** for I/O
+- **90% lower RAM usage** (fewer threads)
+- **Reduced latency** under heavy load
 
 :::
 
-### 🎯 Cas d'usage Hyperion
+### 🎯 Hyperion usecase
 
-**Avant (synchrone) :**
-
-```
-50 utilisateurs qui consultent leurs événements simultanément
-→ 50 threads Python actifs
-→ Serveur surchargé à 50 utilisateurs
-```
-
-**Après (asynchrone) :**
+**Before (sync) :**
 
 ```
-500 utilisateurs qui consultent leurs événements simultanément
-→ 1-2 threads Python actifs
-→ Serveur fluide même à 500 utilisateurs
+50 users viewing their events simultaneously
+→ 50 active Python threads
+→ Server overloaded at 50 users
 ```
 
-## 🧠 Principe simplifié
+**After (async) :**
 
-L'asynchrone, c'est comme un serveur de restaurant efficace :
+```
+500 users viewing their events simultaneously
+→ 1-2 active Python threads
+→ The server runs smoothly even with 500 users
+```
+
+## 🧠 Simplified principle
+
+Asynchronous processing is like an efficient restaurant waiter :
 
 ::: code-group
 
 ```text [Serveur synchrone (inefficace)]
-1. Prendre commande table 1
-2. Aller en cuisine et ATTENDRE le plat ⏰
-3. Revenir avec le plat
-4. Prendre commande table 2
-5. Aller en cuisine et ATTENDRE le plat ⏰
-→ 1 table servie toutes les 10 minutes
+1. Take the order from table 1
+2. Go to the kitchen and WAIT for the dish ⏰
+3. Return with the dish
+4. Take the order from table 2
+5. Go to the kitchen and WAIT for the dish ⏰
+→ 1 table served every 10 minutes
 ```
 
 ```text [Serveur asynchrone (efficace)]
-1. Prendre commande table 1
-2. Donner commande en cuisine (sans attendre)
-3. Prendre commande table 2
-4. Prendre commande table 3
-5. Récupérer plat table 1 (prêt)
-6. Continuer...
-→ 10 tables servies en 10 minutes
+1. Take the order from table 1
+2. Send the order to the kitchen (without waiting)
+3. Take the order from table 2
+4. Take the order from table 3
+5. Pick up the dish from table 1 (ready)
+6. Continue...
+→ 10 tables served in 10 minutes
 ```
 
 :::
 
-## 🎯 Quand utiliser l'asynchrone ?
+## 🎯 When to use asynchronous processing?
 
-::: tip Asynchrone recommandé pour
+::: tip Asynchronous is recommended for
 
-- **Applications web** (FastAPI, Django Async)
-- **APIs REST** avec beaucoup de trafic
-- **Microservices** qui font des appels externes
-- **Applications avec I/O intensives** (DB, fichiers, réseau)
-
-:::
-
-::: warning Asynchrone non nécessaire pour
-
-- **Scripts de batch** simples
-- **Applications avec très peu d'utilisateurs** (<10 simultanés)
-- **Calculs intensifs** (CPU-bound)
+- **Web applications** (FastAPI, Django Async)
+- **REST APIs** with high traffic
+- **Microservices** that make external calls
+- **I/O-intensive applications** (db, files, network)
 
 :::
 
-## 🔄 Migration en une phrase
+::: warning Asynchronous processing is not required for
 
-Remplacez `session.query()` par `await db.execute(select())` et ajoutez `async`/`await` partout.
+- Simple **batch scripts**
+- **Applications with very few users** (<10 concurrent users)
+- **Computationally intensive tasks** (CPU-bound)
 
-**Résultat :** Votre application Hyperion peut servir 10x plus d'utilisateurs simultanés avec les mêmes ressources serveur.
+:::
+
+## 🔄 Migration in one sentence
+
+Replace `session.query()` with `await db.execute(select())` and add `async`/`await` everywhere.
+
+**Result:** Your Hyperion application can serve 10 times as many concurrent users with the same server resources.
